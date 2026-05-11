@@ -11,6 +11,7 @@ after each iteration and it's included in prompts for context.
 - Keep runtime state explicit in typed dataclasses, with small state methods for input, output, memory, and trace mutation so later interpreter stories can add traversal semantics without spreading buffer bookkeeping across modules.
 - Keep traversal deterministic by discovering `○` source positions in row-major order, running one flow at a time, and recording every traversed semantic or arrow symbol through `ExecutionState.record_step`.
 - Apply semantic symbol effects before recording each trace snapshot so trace entries reflect the state after the visited symbol executes.
+- Use small context dataclasses for library extension hooks so callbacks can inspect current values and execution state without widening positional callable signatures later.
 
 ---
 
@@ -66,5 +67,17 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - Patterns discovered: semantic execution belongs in the interpreter loop immediately after position/direction are set and before `ExecutionState.record_step`, keeping state mutation centralized and trace snapshots meaningful.
   - Gotchas encountered: once `○` performs real input reads, existing traversal-only tests must provide dummy input values or intentionally assert `InterpreterInputError`.
+  - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
+---
+
+## 2026-05-11 - US-006
+- Implemented a context-aware transform registry API for `△` using `TransformContext`, `Transform`, and `TransformRegistry`.
+- Kept the default transform registry mapping `△` to identity while allowing callers to pass or mutate registries programmatically.
+- Updated interpreter `△` execution to pass symbol, current value, and mutable execution state into transform callbacks, with the callback return value becoming the next flow value.
+- Added semantics tests for configured custom behavior, programmatic registration, numeric increment, and transform access to execution state/memory.
+- Files changed: `src/geobe/transforms.py`, `src/geobe/interpreter.py`, `src/geobe/__init__.py`, `tests/test_interpreter_semantics.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: context dataclasses make callback APIs extensible while preserving a single typed argument for custom behavior.
+  - Gotchas encountered: the previous one-argument transform callable did not expose execution state, so tests and custom transform examples needed to move to the explicit context contract.
   - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
 ---

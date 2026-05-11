@@ -7,7 +7,12 @@ from dataclasses import dataclass, field
 from geobe.grid import Grid, Position
 from geobe.parser import parse_program
 from geobe.state import Direction, ExecutionState, Value
-from geobe.transforms import TransformRegistry, default_transform_registry, identity
+from geobe.transforms import (
+    TransformContext,
+    TransformRegistry,
+    default_transform_registry,
+    identity,
+)
 
 DIRECTIONS: tuple[Direction, ...] = ("right", "down", "left", "up")
 ARROW_DIRECTIONS: dict[str, Direction] = {
@@ -94,7 +99,12 @@ class Interpreter:
 
         if symbol == "△":
             transform = self.transforms.get("△", identity)
-            state.current_value = transform(state.current_value)
+            context = TransformContext(
+                symbol=symbol,
+                current_value=state.current_value,
+                state=state,
+            )
+            state.current_value = transform(context)
             return
 
         if symbol == "▽":

@@ -3,15 +3,27 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from dataclasses import dataclass
 
-Transform = Callable[[Any], Any]
+from geobe.state import ExecutionState, Value
+
+
+@dataclass(frozen=True, slots=True)
+class TransformContext:
+    """Runtime context passed to a semantic transform."""
+
+    symbol: str
+    current_value: Value
+    state: ExecutionState
+
+
+Transform = Callable[[TransformContext], Value]
 TransformRegistry = dict[str, Transform]
 
 
-def identity(value: Any) -> Any:
+def identity(context: TransformContext) -> Value:
     """Return a value unchanged."""
-    return value
+    return context.current_value
 
 
 def default_transform_registry() -> TransformRegistry:
