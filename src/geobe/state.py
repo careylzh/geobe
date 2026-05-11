@@ -28,7 +28,10 @@ class TraceEntry:
     position: Position | None
     direction: Direction | None
     symbol: str | None
+    input_value: Value | None
     current_value: Value
+    output_changes: tuple[Value, ...]
+    memory_changes: dict[str, Value]
     input_buffer: tuple[Value, ...]
     output_buffer: tuple[Value, ...]
     memory: dict[str, Value]
@@ -62,7 +65,14 @@ class ExecutionState:
         """Store the current value in deterministic implicit memory."""
         self.memory[key] = self.current_value
 
-    def record_step(self, symbol: str | None = None) -> TraceEntry:
+    def record_step(
+        self,
+        symbol: str | None = None,
+        *,
+        input_value: Value | None = None,
+        output_changes: tuple[Value, ...] = (),
+        memory_changes: dict[str, Value] | None = None,
+    ) -> TraceEntry:
         """Record a typed trace snapshot for the current state."""
         self.visited_steps += 1
         entry = TraceEntry(
@@ -70,7 +80,10 @@ class ExecutionState:
             position=self.current_position,
             direction=self.current_direction,
             symbol=symbol,
+            input_value=input_value,
             current_value=self.current_value,
+            output_changes=output_changes,
+            memory_changes=dict(memory_changes or {}),
             input_buffer=tuple(self.input_buffer),
             output_buffer=tuple(self.output_buffer),
             memory=dict(self.memory),

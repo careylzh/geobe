@@ -26,6 +26,15 @@ TRAVERSABLE_SYMBOLS = frozenset(ARROW_DIRECTIONS) | SEMANTIC_SYMBOLS
 DEFAULT_MAX_STEPS = 1000
 
 
+@dataclass(frozen=True, slots=True)
+class StepEffects:
+    """State changes produced while executing one symbol."""
+
+    input_value: Value | None = None
+    output_changes: tuple[Value, ...] = ()
+    memory_changes: dict[str, Value] = field(default_factory=dict)
+
+
 class InterpreterStepLimitError(RuntimeError):
     """Raised when execution exceeds the configured maximum step count."""
 
@@ -68,8 +77,8 @@ class Interpreter:
 
             state.current_position = position
             state.current_direction = direction
-            self._execute_symbol(state, symbol)
-            self._record_step(state, symbol)
+            effects = self._execute_symbol(state, symbol)
+            self._record_step(state, symbol, effects)
 
             if direction is None:
                 direction = _outgoing_direction(grid, position)
@@ -79,25 +88,36 @@ class Interpreter:
 
             position = _next_position(grid, position, direction)
 
-    def _record_step(self, state: ExecutionState, symbol: str) -> None:
+    def _record_step(
+        self,
+        state: ExecutionState,
+        symbol: str,
+        effects: StepEffects,
+    ) -> None:
         if state.visited_steps >= self.max_steps:
             msg = f"Execution exceeded maximum step limit of {self.max_steps}."
             raise InterpreterStepLimitError(msg)
-        state.record_step(symbol=symbol)
+        state.record_step(
+            symbol=symbol,
+            input_value=effects.input_value,
+            output_changes=effects.output_changes,
+            memory_changes=effects.memory_changes,
+        )
 
-    def _execute_symbol(self, state: ExecutionState, symbol: str) -> None:
+    def _execute_symbol(self, state: ExecutionState, symbol: str) -> StepEffects:
+        output_start = len(state.output_buffer)
+        memory_before = dict(state.memory)
+        input_value: Value | None = None
+
         if symbol == "○":
             if not state.input_buffer:
                 msg = _missing_input_message(state)
                 raise InterpreterInputError(msg)
-            state.current_value = state.read_input()
-            return
-
-        if symbol == "□":
+            input_value = state.read_input()
+            state.current_value = input_value
+        elif symbol == "□":
             state.store_current_value()
-            return
-
-        if symbol == "△":
+        elif symbol == "△":
             transform = self.transforms.get("△", identity)
             context = TransformContext(
                 symbol=symbol,
@@ -105,10 +125,21 @@ class Interpreter:
                 state=state,
             )
             state.current_value = transform(context)
-            return
-
-        if symbol == "▽":
+        elif symbol == "▽":
             state.append_output()
+
+        return StepEffects(
+            input_value=input_value,
+            output_changes=tuple(state.output_buffer[output_start:]),
+            memory_changes=_memory_changes(memory_before, state.memory),
+        )
+
+
+def _memory_changes(
+    before: dict[str, Value],
+    after: dict[str, Value],
+) -> dict[str, Value]:
+    return {key: value for key, value in after.items() if before.get(key) != value}
 
 
 def _missing_input_message(state: ExecutionState) -> str:

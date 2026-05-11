@@ -51,7 +51,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--trace",
         action="store_true",
-        help="Include execution trace entries in the JSON output.",
+        help="Include execution trace entries in the output.",
+    )
+    parser.add_argument(
+        "--trace-format",
+        choices=("json", "text"),
+        default="json",
+        help="Render trace as structured JSON or readable text.",
     )
     return parser
 
@@ -85,11 +91,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"geobe: {error}", file=sys.stderr)
         return EXIT_RUNTIME_ERROR
 
-    print(_format_result(state, include_trace=args.trace))
+    print(
+        _format_result(
+            state,
+            include_trace=args.trace,
+            trace_format=args.trace_format,
+        ),
+    )
     return 0
 
 
-def _format_result(state: ExecutionState, *, include_trace: bool) -> str:
+def _format_result(
+    state: ExecutionState,
+    *,
+    include_trace: bool,
+    trace_format: str = "json",
+) -> str:
+    if include_trace and trace_format == "text":
+        return _format_text_result(state)
+
     payload: dict[str, Any] = {"outputs": state.output_buffer}
     if include_trace:
         payload["trace"] = [_trace_entry_to_json(entry) for entry in state.trace]
@@ -109,8 +129,45 @@ def _trace_entry_to_json(entry: TraceEntry) -> dict[str, Any]:
         "position": position,
         "direction": entry.direction,
         "symbol": entry.symbol,
+        "input_value": entry.input_value,
         "current_value": entry.current_value,
+        "output_changes": list(entry.output_changes),
+        "memory_changes": entry.memory_changes,
         "input_buffer": list(entry.input_buffer),
         "output_buffer": list(entry.output_buffer),
         "memory": entry.memory,
     }
+
+
+def _format_text_result(state: ExecutionState) -> str:
+    lines = [
+        f"outputs: {_format_value(state.output_buffer)}",
+        "trace:",
+    ]
+    lines.extend(_format_trace_line(entry) for entry in state.trace)
+    return "\n".join(lines)
+
+
+def _format_trace_line(entry: TraceEntry) -> str:
+    position = "position=None"
+    if entry.position is not None:
+        position = f"row={entry.position.row} column={entry.position.column}"
+
+    parts = [
+        f"{entry.step}.",
+        position,
+        f"symbol={entry.symbol}",
+        f"direction={entry.direction}",
+        f"current={_format_value(entry.current_value)}",
+    ]
+    if entry.input_value is not None:
+        parts.append(f"input={_format_value(entry.input_value)}")
+    if entry.output_changes:
+        parts.append(f"outputs+={_format_value(list(entry.output_changes))}")
+    if entry.memory_changes:
+        parts.append(f"memory+={_format_value(entry.memory_changes)}")
+    return " ".join(parts)
+
+
+def _format_value(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True)

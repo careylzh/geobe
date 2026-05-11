@@ -62,8 +62,11 @@ def test_cli_trace_mode_prints_execution_trace(
             "current_value": "traced",
             "direction": None,
             "input_buffer": [],
+            "input_value": "traced",
             "memory": {},
+            "memory_changes": {},
             "output_buffer": [],
+            "output_changes": [],
             "position": {"column": 0, "row": 0},
             "step": 1,
             "symbol": "○",
@@ -72,8 +75,11 @@ def test_cli_trace_mode_prints_execution_trace(
             "current_value": "traced",
             "direction": "right",
             "input_buffer": [],
+            "input_value": None,
             "memory": {},
+            "memory_changes": {},
             "output_buffer": [],
+            "output_changes": [],
             "position": {"column": 1, "row": 0},
             "step": 2,
             "symbol": "→",
@@ -82,13 +88,55 @@ def test_cli_trace_mode_prints_execution_trace(
             "current_value": "traced",
             "direction": "right",
             "input_buffer": [],
+            "input_value": None,
             "memory": {},
+            "memory_changes": {},
             "output_buffer": ["traced"],
+            "output_changes": ["traced"],
             "position": {"column": 2, "row": 0},
             "step": 3,
             "symbol": "▽",
         },
     ]
+
+
+def test_cli_trace_text_mode_renders_readable_steps(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = main(
+        [
+            "--code",
+            "○→□→▽",
+            "--input",
+            "text-value",
+            "--trace",
+            "--trace-format",
+            "text",
+        ],
+    )
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.out.splitlines() == [
+        'outputs: ["text-value"]',
+        "trace:",
+        (
+            '1. row=0 column=0 symbol=○ direction=None current="text-value" '
+            'input="text-value"'
+        ),
+        '2. row=0 column=1 symbol=→ direction=right current="text-value"',
+        (
+            '3. row=0 column=2 symbol=□ direction=right current="text-value" '
+            'memory+={"□": "text-value"}'
+        ),
+        '4. row=0 column=3 symbol=→ direction=right current="text-value"',
+        (
+            '5. row=0 column=4 symbol=▽ direction=right current="text-value" '
+            'outputs+=["text-value"]'
+        ),
+    ]
+    assert captured.err == ""
 
 
 def test_cli_invalid_runtime_input_returns_nonzero_and_message(

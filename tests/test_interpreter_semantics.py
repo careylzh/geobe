@@ -68,7 +68,10 @@ def test_triangle_transform_receives_execution_context() -> None:
         observed_memory.append(dict(context.state.memory))
         return f"{context.symbol}:{context.current_value}"
 
-    state = Interpreter(transforms={"△": annotate}).run("○→□→△→▽", inputs=["seen"])
+    state = Interpreter(transforms={"△": annotate}).run(
+        "○→□→△→▽",
+        inputs=["seen"],
+    )
 
     assert state.output_buffer == ["△:seen"]
     assert observed_steps == [4]
@@ -80,6 +83,32 @@ def test_down_triangle_appends_current_flow_value_to_output() -> None:
 
     assert state.output_buffer == ["result"]
     assert state.trace[-1].output_buffer == ("result",)
+    assert state.trace[-1].output_changes == ("result",)
+
+
+def test_trace_records_effects_for_known_program() -> None:
+    state = Interpreter().run("○→□→▽", inputs=["known"])
+
+    assert [
+        (
+            entry.step,
+            entry.position.row if entry.position is not None else None,
+            entry.position.column if entry.position is not None else None,
+            entry.symbol,
+            entry.direction,
+            entry.input_value,
+            entry.current_value,
+            entry.output_changes,
+            entry.memory_changes,
+        )
+        for entry in state.trace
+    ] == [
+        (1, 0, 0, "○", None, "known", "known", (), {}),
+        (2, 0, 1, "→", "right", None, "known", (), {}),
+        (3, 0, 2, "□", "right", None, "known", (), {DEFAULT_MEMORY_KEY: "known"}),
+        (4, 0, 3, "→", "right", None, "known", (), {}),
+        (5, 0, 4, "▽", "right", None, "known", ("known",), {}),
+    ]
 
 
 def test_missing_input_at_circle_raises_clear_interpreter_error() -> None:

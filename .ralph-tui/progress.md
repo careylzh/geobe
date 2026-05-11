@@ -11,6 +11,7 @@ after each iteration and it's included in prompts for context.
 - Keep runtime state explicit in typed dataclasses, with small state methods for input, output, memory, and trace mutation so later interpreter stories can add traversal semantics without spreading buffer bookkeeping across modules.
 - Keep traversal deterministic by discovering `○` source positions in row-major order, running one flow at a time, and recording every traversed semantic or arrow symbol through `ExecutionState.record_step`.
 - Apply semantic symbol effects before recording each trace snapshot so trace entries reflect the state after the visited symbol executes.
+- Record trace entries as both post-step snapshots and per-step deltas, using full state snapshots for debugging context and explicit input/output/memory changes for deterministic assertions.
 - Use small context dataclasses for library extension hooks so callbacks can inspect current values and execution state without widening positional callable signatures later.
 - Keep CLI output script-friendly as JSON with a stable top-level `outputs` key, adding optional keys such as `trace` only when requested.
 
@@ -94,4 +95,16 @@ after each iteration and it's included in prompts for context.
   - Patterns discovered: CLI formatting should stay separate from interpreter state mutation by serializing `ExecutionState` and `TraceEntry` at the boundary.
   - Gotchas encountered: this environment still has no `python` executable on PATH, and `mypy`/`ruff` are not installed for `python3`; `python3 -m pytest`, `python3 -m compileall -q src tests`, `git diff --check`, and `PYTHONPATH=src python3 -m geobe --code '○→▽' --input smoke --trace` pass.
   - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH.
+---
+
+## 2026-05-11 - US-008
+- Implemented richer structured trace entries with position, symbol, direction, consumed input value, current value, output deltas, memory deltas, and full input/output/memory snapshots.
+- Added interpreter-side step effect tracking so semantic symbols and context-aware transforms report deterministic trace changes.
+- Added CLI `--trace-format text` rendering for readable execution traces while preserving JSON trace output as the default.
+- Added focused trace tests for a known program, JSON trace fields, and readable CLI trace output.
+- Files changed: `src/geobe/state.py`, `src/geobe/interpreter.py`, `src/geobe/cli.py`, `tests/test_state.py`, `tests/test_interpreter_semantics.py`, `tests/test_cli.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: trace entries are most useful when they include both the full post-step snapshot and explicit per-step deltas for inputs, outputs, and memory.
+  - Gotchas encountered: the repository tracks some `__pycache__` files, so test runs should use `PYTHONDONTWRITEBYTECODE=1` to avoid unrelated bytecode churn.
+  - Quality gates: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest`, `PYTHONDONTWRITEBYTECODE=1 python3 -m compileall -q src tests`, and `git diff --check` pass; `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` cannot run because `python` is not on PATH; `python3 -m mypy .` and `python3 -m ruff check .` cannot run because `mypy` and `ruff` are not installed.
 ---

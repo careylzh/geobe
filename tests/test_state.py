@@ -63,7 +63,10 @@ def test_trace_records_typed_state_snapshots() -> None:
     assert entry.position == Position(2, 3)
     assert entry.direction == "right"
     assert entry.symbol == "○"
+    assert entry.input_value is None
     assert entry.current_value == "current"
+    assert entry.output_changes == ()
+    assert entry.memory_changes == {}
     assert entry.input_buffer == ("next",)
     assert entry.output_buffer == ("done",)
     assert entry.memory == {DEFAULT_MEMORY_KEY: "stored"}
