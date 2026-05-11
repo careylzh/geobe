@@ -3,7 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import json
+import sys
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
+
+from geobe.interpreter import Interpreter
+from geobe.parser import ProgramParseError
+from geobe.state import ExecutionState, TraceEntry, Value
+
+
+EXIT_RUNTIME_ERROR = 1
+EXIT_USAGE_ERROR = 2
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -13,9 +25,15 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run geometric esoteric language programs.",
     )
     parser.add_argument(
-        "program",
+        "path",
         nargs="?",
-        help="Path to a .geo file. Inline execution will be added in a later story.",
+        help="Path to a .geo file to execute.",
+    )
+    parser.add_argument(
+        "-c",
+        "--code",
+        dest="inline_program",
+        help="Inline program source to execute instead of a file.",
     )
     parser.add_argument(
         "-i",
@@ -25,11 +43,74 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Input value supplied to the program. Repeat to pass multiple strings.",
     )
+    parser.add_argument(
+        "--stdin-input",
+        action="store_true",
+        help="Read additional input values from stdin, one value per line.",
+    )
+    parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Include execution trace entries in the JSON output.",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the Geobe CLI."""
     parser = build_parser()
-    parser.parse_args(argv)
+    args = parser.parse_args(argv)
+
+    if args.path and args.inline_program is not None:
+        parser.error("provide either a .geo file path or --code, not both")
+
+    if not args.path and args.inline_program is None:
+        parser.error("provide a .geo file path or --code")
+
+    program = args.inline_program
+    if program is None:
+        try:
+            program = Path(args.path).read_text(encoding="utf-8")
+        except OSError as error:
+            print(f"geobe: failed to read program: {error}", file=sys.stderr)
+            return EXIT_USAGE_ERROR
+
+    inputs: list[Value] = list(args.inputs)
+    if args.stdin_input:
+        inputs.extend(line.rstrip("\n") for line in sys.stdin)
+
+    try:
+        state = Interpreter().run(program, inputs=inputs)
+    except (ProgramParseError, RuntimeError) as error:
+        print(f"geobe: {error}", file=sys.stderr)
+        return EXIT_RUNTIME_ERROR
+
+    print(_format_result(state, include_trace=args.trace))
     return 0
+
+
+def _format_result(state: ExecutionState, *, include_trace: bool) -> str:
+    payload: dict[str, Any] = {"outputs": state.output_buffer}
+    if include_trace:
+        payload["trace"] = [_trace_entry_to_json(entry) for entry in state.trace]
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True)
+
+
+def _trace_entry_to_json(entry: TraceEntry) -> dict[str, Any]:
+    position = None
+    if entry.position is not None:
+        position = {
+            "row": entry.position.row,
+            "column": entry.position.column,
+        }
+
+    return {
+        "step": entry.step,
+        "position": position,
+        "direction": entry.direction,
+        "symbol": entry.symbol,
+        "current_value": entry.current_value,
+        "input_buffer": list(entry.input_buffer),
+        "output_buffer": list(entry.output_buffer),
+        "memory": entry.memory,
+    }

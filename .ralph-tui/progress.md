@@ -12,6 +12,7 @@ after each iteration and it's included in prompts for context.
 - Keep traversal deterministic by discovering `○` source positions in row-major order, running one flow at a time, and recording every traversed semantic or arrow symbol through `ExecutionState.record_step`.
 - Apply semantic symbol effects before recording each trace snapshot so trace entries reflect the state after the visited symbol executes.
 - Use small context dataclasses for library extension hooks so callbacks can inspect current values and execution state without widening positional callable signatures later.
+- Keep CLI output script-friendly as JSON with a stable top-level `outputs` key, adding optional keys such as `trace` only when requested.
 
 ---
 
@@ -80,4 +81,17 @@ after each iteration and it's included in prompts for context.
   - Patterns discovered: context dataclasses make callback APIs extensible while preserving a single typed argument for custom behavior.
   - Gotchas encountered: the previous one-argument transform callable did not expose execution state, so tests and custom transform examples needed to move to the explicit context contract.
   - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
+---
+
+## 2026-05-11 - US-007
+- Implemented the CLI runner behind the existing `geobe = "geobe.cli:main"` package entry point.
+- Added file execution through the positional `.geo` path and inline execution through `-c/--code`.
+- Added repeated `--input/-i` values plus `--stdin-input` for newline-delimited stdin values.
+- Added stable JSON output with top-level `outputs`, optional `--trace` serialization, and readable non-zero error paths for file/read and runtime errors.
+- Added CLI tests for successful file execution, inline execution, stdin input, trace mode, and invalid missing-input handling.
+- Files changed: `src/geobe/cli.py`, `tests/test_cli.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: CLI formatting should stay separate from interpreter state mutation by serializing `ExecutionState` and `TraceEntry` at the boundary.
+  - Gotchas encountered: this environment still has no `python` executable on PATH, and `mypy`/`ruff` are not installed for `python3`; `python3 -m pytest`, `python3 -m compileall -q src tests`, `git diff --check`, and `PYTHONPATH=src python3 -m geobe --code '○→▽' --input smoke --trace` pass.
+  - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH.
 ---
