@@ -1,0 +1,13 @@
+{
+  "id": "aff50c27-955f-4cb7-8b97-4f49076f288a",
+  "status": "running",
+  "startedAt": "2026-05-11T13:58:08.927Z",
+  "updatedAt": "2026-05-11T13:58:08.927Z",
+  "agentPlugin": "codex",
+  "trackerPlugin": "json",
+  "currentIteration": 0,
+  "maxIterations": 10,
+  "totalTasks": 0,
+  "tasksCompleted": 0,
+  "cwd": "/Users/careylai/Desktop/geobe"
+}

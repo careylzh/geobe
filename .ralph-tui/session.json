@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "sessionId": "aff50c27-955f-4cb7-8b97-4f49076f288a",
+  "status": "running",
+  "startedAt": "2026-05-11T13:58:08.972Z",
+  "updatedAt": "2026-05-11T14:04:03.661Z",
+  "currentIteration": 0,
+  "maxIterations": 10,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "codex",
+  "trackerState": {
+    "plugin": "json",
+    "totalTasks": 0,
+    "tasks": []
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/careylai/Desktop/geobe",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}

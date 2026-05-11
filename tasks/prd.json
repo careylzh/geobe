@@ -1,0 +1,201 @@
+{
+  "name": "Geometric Esoteric Language Interpreter",
+  "branchName": "feature/geometric-esoteric-language-interpreter",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Project Structure and Packaging",
+      "description": "As a Python developer, I want a standard package structure so that the interpreter can be used as both a library and CLI.",
+      "acceptanceCriteria": [
+        "A Python package is created for the geometric language interpreter.",
+        "The project includes a pyproject.toml with package metadata, CLI entry point, pytest, mypy, and ruff configuration.",
+        "Source code is organized into clear modules for parser, model/state, interpreter/engine, transforms, and CLI.",
+        "Tests are placed in a dedicated test directory.",
+        "The package can be imported from tests without modifying sys.path manually.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-002",
+      "title": "Grid Parser",
+      "description": "As a language user, I want multiline diagram text converted into a normalized 2D grid so that spatial programs can be interpreted.",
+      "acceptanceCriteria": [
+        "The parser accepts a multiline string.",
+        "The parser preserves spaces and meaningful Unicode symbols.",
+        "Rows are normalized to a rectangular grid by padding shorter rows with spaces.",
+        "The parser exposes grid width, height, and safe position lookup.",
+        "Empty input is handled with a clear validation error.",
+        "Unit tests cover uneven row lengths, Unicode symbols, whitespace, and invalid empty programs.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-001"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Core Execution State",
+      "description": "As an interpreter developer, I want explicit execution state so that program behavior is observable and extensible.",
+      "acceptanceCriteria": [
+        "Execution state tracks the current position, current direction, current value, memory store, input buffer, output buffer, visited steps, and execution trace.",
+        "Input values can be supplied as a list of Python values or strings from the CLI.",
+        "Output values are collected in order.",
+        "Memory store behavior for □ is deterministic and documented.",
+        "State objects use typed Python structures suitable for mypy checking.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [
+        "US-001"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Directional Flow Traversal",
+      "description": "As a language user, I want execution to follow arrow symbols so that geometry defines control flow.",
+      "acceptanceCriteria": [
+        "Execution starts from each ○ source node found in the grid.",
+        "The MVP executes flows deterministically in a single-threaded order.",
+        "Arrow symbols →, ←, ↑, and ↓ set or continue movement direction.",
+        "Node traversal skips whitespace while moving in the active direction until it reaches a semantic symbol, arrow, boundary, or dead end.",
+        "If no valid direction is available from a node, that flow terminates cleanly.",
+        "The engine has an explicit maximum step limit to prevent infinite loops.",
+        "Tests cover left-to-right, right-to-left, vertical, dead-end, boundary, and step-limit behavior.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "dependsOn": [
+        "US-002",
+        "US-003"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Core Symbol Semantics",
+      "description": "As a language user, I want the core geometric symbols to execute predictable behavior so that simple diagrams can process data.",
+      "acceptanceCriteria": [
+        "○ reads the next input value into the current flow.",
+        "□ stores the current flow value in memory.",
+        "△ transforms the current flow value using the configured transform behavior.",
+        "▽ appends the current flow value to the output buffer.",
+        "Default △ behavior is identity transformation.",
+        "Missing input at ○ is handled with a clear interpreter error.",
+        "Tests verify input, storage, identity transform, output, and error cases.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "User-Defined Transformations",
+      "description": "As a Python developer, I want to register custom behavior for △ so that the language can perform real computation beyond identity transforms.",
+      "acceptanceCriteria": [
+        "The interpreter accepts a transformation registry or callback configuration.",
+        "The default transform registry maps △ to identity.",
+        "Custom transforms can be registered programmatically when using the library.",
+        "Transform functions receive enough context to inspect current value and execution state.",
+        "Transform functions return the next flow value.",
+        "Tests demonstrate at least one custom transform, such as uppercasing a string or incrementing a number.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "dependsOn": [
+        "US-005"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "CLI Runner",
+      "description": "As a command-line user, I want to run geometric programs from files or inline strings so that I can execute .geo programs outside Python code.",
+      "acceptanceCriteria": [
+        "A CLI command is exposed through the package entry point.",
+        "The CLI can run a .geo file path.",
+        "The CLI can run an inline program string.",
+        "The CLI accepts input values through arguments or stdin.",
+        "The CLI prints output values in a predictable format.",
+        "The CLI has an option to print the execution trace.",
+        "CLI errors produce non-zero exit codes and readable messages.",
+        "Tests cover successful file execution, inline execution, trace mode, and invalid input.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "dependsOn": [
+        "US-005"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Execution Trace and Debug Output",
+      "description": "As a developer debugging spatial programs, I want an execution trace so that I can understand how the interpreter moved through the grid.",
+      "acceptanceCriteria": [
+        "Each executed step records position, symbol, direction, input value/current value, output changes, and memory changes when relevant.",
+        "Trace records are structured data in the library API.",
+        "The CLI can render trace records as readable text.",
+        "Trace output is deterministic for the same program and input.",
+        "Tests assert trace content for a small known program.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "dependsOn": [
+        "US-005",
+        "US-007"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Example Programs and Demo Runner",
+      "description": "As a new user, I want example programs so that I can understand how the language works quickly.",
+      "acceptanceCriteria": [
+        "The repository includes at least one .geo example for input-store-transform-output behavior.",
+        "The repository includes at least one example demonstrating a custom transform through Python code.",
+        "Running the package module directly or invoking the CLI demonstrates the example behavior.",
+        "Documentation explains the core symbols and expected output for each example.",
+        "Tests verify that the documented example program produces the expected output.",
+        "python -m pytest passes",
+        "python -m mypy . passes",
+        "python -m ruff check . passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "dependsOn": [
+        "US-006",
+        "US-007",
+        "US-008"
+      ]
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-05-11T14:04:03.661Z"
+  }
+}
