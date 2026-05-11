@@ -14,9 +14,9 @@ def test_interpreter_returns_explicit_execution_state_after_traversal() -> None:
     assert state.program == "○→▽"
     assert state.current_position == Position(0, 2)
     assert state.current_direction == "right"
-    assert state.current_value is None
-    assert state.input_buffer == [1, "two"]
-    assert state.output_buffer == []
+    assert state.current_value == 1
+    assert state.input_buffer == ["two"]
+    assert state.output_buffer == [1]
     assert state.memory == {}
     assert state.visited_steps == 3
     assert [entry.symbol for entry in state.trace] == ["○", "→", "▽"]

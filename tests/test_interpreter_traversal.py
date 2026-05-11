@@ -9,7 +9,7 @@ from geobe.interpreter import Interpreter, InterpreterStepLimitError
 
 
 def test_traversal_runs_left_to_right_from_source() -> None:
-    state = Interpreter().run("○→  ▽")
+    state = Interpreter().run("○→  ▽", inputs=["value"])
 
     assert [entry.symbol for entry in state.trace] == ["○", "→", "▽"]
     assert [entry.position for entry in state.trace] == [
@@ -21,7 +21,7 @@ def test_traversal_runs_left_to_right_from_source() -> None:
 
 
 def test_traversal_runs_right_to_left_from_source() -> None:
-    state = Interpreter().run("▽  ←○")
+    state = Interpreter().run("▽  ←○", inputs=["value"])
 
     assert [entry.symbol for entry in state.trace] == ["○", "←", "▽"]
     assert [entry.position for entry in state.trace] == [
@@ -35,7 +35,7 @@ def test_traversal_runs_right_to_left_from_source() -> None:
 def test_traversal_runs_vertically_from_source() -> None:
     program = "○\n↓\n \n▽"
 
-    state = Interpreter().run(program)
+    state = Interpreter().run(program, inputs=["value"])
 
     assert [entry.symbol for entry in state.trace] == ["○", "↓", "▽"]
     assert [entry.position for entry in state.trace] == [
@@ -47,7 +47,7 @@ def test_traversal_runs_vertically_from_source() -> None:
 
 
 def test_traversal_terminates_when_source_has_no_valid_direction() -> None:
-    state = Interpreter().run("○  ▽")
+    state = Interpreter().run("○  ▽", inputs=["value"])
 
     assert [entry.symbol for entry in state.trace] == ["○"]
     assert state.current_position == Position(0, 0)
@@ -55,7 +55,7 @@ def test_traversal_terminates_when_source_has_no_valid_direction() -> None:
 
 
 def test_traversal_terminates_cleanly_at_boundary() -> None:
-    state = Interpreter().run("○→")
+    state = Interpreter().run("○→", inputs=["value"])
 
     assert [entry.symbol for entry in state.trace] == ["○", "→"]
     assert state.current_position == Position(0, 1)
@@ -63,7 +63,7 @@ def test_traversal_terminates_cleanly_at_boundary() -> None:
 
 
 def test_multiple_source_flows_run_in_row_major_order() -> None:
-    state = Interpreter().run("○→▽\n○→□")
+    state = Interpreter().run("○→▽\n○→□", inputs=["first", "second"])
 
     assert [entry.symbol for entry in state.trace] == [
         "○",
@@ -87,4 +87,4 @@ def test_traversal_enforces_maximum_step_limit() -> None:
     program = "○→↓\n ↑←"
 
     with pytest.raises(InterpreterStepLimitError, match="maximum step limit of 5"):
-        Interpreter(max_steps=5).run(program)
+        Interpreter(max_steps=5).run(program, inputs=["value"])

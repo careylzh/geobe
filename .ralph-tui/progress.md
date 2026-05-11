@@ -10,6 +10,7 @@ after each iteration and it's included in prompts for context.
 - Model parser output as an immutable `Grid` dataclass with width, height, normalized rows, and safe `Position` lookups so later interpreter stories can share one grid API.
 - Keep runtime state explicit in typed dataclasses, with small state methods for input, output, memory, and trace mutation so later interpreter stories can add traversal semantics without spreading buffer bookkeeping across modules.
 - Keep traversal deterministic by discovering `○` source positions in row-major order, running one flow at a time, and recording every traversed semantic or arrow symbol through `ExecutionState.record_step`.
+- Apply semantic symbol effects before recording each trace snapshot so trace entries reflect the state after the visited symbol executes.
 
 ---
 
@@ -54,5 +55,16 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - Patterns discovered: traversal can stay independent from symbol semantics by recording visits now and leaving value/memory/output effects for the semantic execution story.
   - Gotchas encountered: an initial source has no active direction, so the engine only starts a flow when the first reachable non-space cell in a cardinal direction is an arrow pointing away from the source; direct semantic neighbors without an arrow terminate cleanly for the MVP.
+  - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
+---
+
+## 2026-05-11 - US-005
+- Implemented core symbol semantics: `○` consumes the next input into the current flow, `□` stores the current value in deterministic implicit memory, `△` applies the configured transform with identity fallback, and `▽` appends the current value to output.
+- Added `InterpreterInputError` with source coordinates for missing input at `○`.
+- Added focused semantics tests for input consumption, memory storage, identity and configured transforms, output append behavior, and missing-input errors; updated traversal/state smoke tests to supply source inputs.
+- Files changed: `src/geobe/interpreter.py`, `src/geobe/__init__.py`, `tests/test_interpreter_semantics.py`, `tests/test_interpreter_traversal.py`, `tests/test_state.py`, `tests/test_package_structure.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: semantic execution belongs in the interpreter loop immediately after position/direction are set and before `ExecutionState.record_step`, keeping state mutation centralized and trace snapshots meaningful.
+  - Gotchas encountered: once `○` performs real input reads, existing traversal-only tests must provide dummy input values or intentionally assert `InterpreterInputError`.
   - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
 ---

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from geobe.grid import Grid, Position
 from geobe.parser import parse_program
 from geobe.state import Direction, ExecutionState, Value
-from geobe.transforms import TransformRegistry, default_transform_registry
+from geobe.transforms import TransformRegistry, default_transform_registry, identity
 
 DIRECTIONS: tuple[Direction, ...] = ("right", "down", "left", "up")
 ARROW_DIRECTIONS: dict[str, Direction] = {
@@ -23,6 +23,10 @@ DEFAULT_MAX_STEPS = 1000
 
 class InterpreterStepLimitError(RuntimeError):
     """Raised when execution exceeds the configured maximum step count."""
+
+
+class InterpreterInputError(RuntimeError):
+    """Raised when a source node needs an input value that is unavailable."""
 
 
 @dataclass(slots=True)
@@ -59,6 +63,7 @@ class Interpreter:
 
             state.current_position = position
             state.current_direction = direction
+            self._execute_symbol(state, symbol)
             self._record_step(state, symbol)
 
             if direction is None:
@@ -74,6 +79,36 @@ class Interpreter:
             msg = f"Execution exceeded maximum step limit of {self.max_steps}."
             raise InterpreterStepLimitError(msg)
         state.record_step(symbol=symbol)
+
+    def _execute_symbol(self, state: ExecutionState, symbol: str) -> None:
+        if symbol == "○":
+            if not state.input_buffer:
+                msg = _missing_input_message(state)
+                raise InterpreterInputError(msg)
+            state.current_value = state.read_input()
+            return
+
+        if symbol == "□":
+            state.store_current_value()
+            return
+
+        if symbol == "△":
+            transform = self.transforms.get("△", identity)
+            state.current_value = transform(state.current_value)
+            return
+
+        if symbol == "▽":
+            state.append_output()
+
+
+def _missing_input_message(state: ExecutionState) -> str:
+    position = state.current_position
+    if position is None:
+        return "Missing input for ○ source."
+    return (
+        "Missing input for ○ source "
+        f"at row {position.row}, column {position.column}."
+    )
 
 
 def _source_positions(grid: Grid) -> list[Position]:
