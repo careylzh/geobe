@@ -16,6 +16,8 @@ from geobe.state import ExecutionState, TraceEntry, Value
 
 EXIT_RUNTIME_ERROR = 1
 EXIT_USAGE_ERROR = 2
+DEMO_PROGRAM = "○→□→△→▽"
+DEMO_INPUTS: tuple[Value, ...] = ("demo-value",)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -70,10 +72,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.path and args.inline_program is not None:
         parser.error("provide either a .geo file path or --code, not both")
 
-    if not args.path and args.inline_program is None:
-        parser.error("provide a .geo file path or --code")
-
     program = args.inline_program
+    inputs: list[Value] = list(args.inputs)
+    if not args.path and args.inline_program is None:
+        program = DEMO_PROGRAM
+        if not inputs and not args.stdin_input:
+            inputs.extend(DEMO_INPUTS)
+
     if program is None:
         try:
             program = Path(args.path).read_text(encoding="utf-8")
@@ -81,7 +86,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"geobe: failed to read program: {error}", file=sys.stderr)
             return EXIT_USAGE_ERROR
 
-    inputs: list[Value] = list(args.inputs)
     if args.stdin_input:
         inputs.extend(line.rstrip("\n") for line in sys.stdin)
 

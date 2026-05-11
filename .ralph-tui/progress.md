@@ -14,6 +14,7 @@ after each iteration and it's included in prompts for context.
 - Record trace entries as both post-step snapshots and per-step deltas, using full state snapshots for debugging context and explicit input/output/memory changes for deterministic assertions.
 - Use small context dataclasses for library extension hooks so callbacks can inspect current values and execution state without widening positional callable signatures later.
 - Keep CLI output script-friendly as JSON with a stable top-level `outputs` key, adding optional keys such as `trace` only when requested.
+- Keep documented examples executable through the same CLI/interpreter paths that users run, then test those files directly so docs, demos, and runtime behavior stay aligned.
 
 ---
 
@@ -107,4 +108,16 @@ after each iteration and it's included in prompts for context.
   - Patterns discovered: trace entries are most useful when they include both the full post-step snapshot and explicit per-step deltas for inputs, outputs, and memory.
   - Gotchas encountered: the repository tracks some `__pycache__` files, so test runs should use `PYTHONDONTWRITEBYTECODE=1` to avoid unrelated bytecode churn.
   - Quality gates: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest`, `PYTHONDONTWRITEBYTECODE=1 python3 -m compileall -q src tests`, and `git diff --check` pass; `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` cannot run because `python` is not on PATH; `python3 -m mypy .` and `python3 -m ruff check .` cannot run because `mypy` and `ruff` are not installed.
+---
+
+## 2026-05-11 - US-009
+- Added a documented `.geo` example for input-store-transform-output behavior using `○→□→△→▽`.
+- Added a Python custom transform example that registers `△` with a `TransformContext` callback and emits stable JSON output.
+- Changed empty CLI/module invocation to run the built-in demo program with a default demo value, so `python -m geobe` demonstrates example behavior directly.
+- Added tests that execute the documented `.geo` file, the CLI path, the no-argument module demo behavior, and the custom transform example.
+- Files changed: `src/geobe/cli.py`, `examples/input_store_transform_output.geo`, `examples/custom_transform.py`, `examples/README.md`, `tests/test_examples.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: documented examples should be small real programs that tests load from disk, with CLI/module smoke coverage proving the published commands still match behavior.
+  - Gotchas encountered: `compileall` writes bytecode even with `PYTHONDONTWRITEBYTECODE=1`, and this repo tracks some `__pycache__` files, so avoid compile verification unless bytecode churn is intentionally cleaned afterward.
+  - Quality gates: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest`, `git diff --check`, `PYTHONPATH=src python3 -m geobe`, `PYTHONPATH=src python3 examples/custom_transform.py`, and `PYTHONPATH=src python3 -m geobe examples/input_store_transform_output.geo --input hello` pass; `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` cannot run because `python` is not on PATH; `python3 -m mypy .` and `python3 -m ruff check .` cannot run because `mypy` and `ruff` are not installed.
 ---
