@@ -1,0 +1,116 @@
+# Geobe
+
+Geobe is a geometric esoteric programming language interpreter written in Python.
+Programs are 2D grids of Unicode symbols where arrows control flow and shapes
+carry semantics.
+
+## Overview
+
+Geobe programs are rectangular text grids. The interpreter finds every `○`
+source node and follows directional flow through the grid until a path ends.
+The current MVP supports a single deterministic memory cell, input buffering,
+output collection, and pluggable `△` transforms.
+
+Core symbols:
+
+- `○` read the next input value
+- `□` store the current value in memory
+- `△` transform the current value
+- `▽` append the current value to output
+- `→`, `←`, `↑`, `↓` move execution through the grid
+
+Spaces are treated as empty cells for traversal. Other non-traversable
+characters stop a path.
+
+## Installation
+
+The project targets Python 3.11+.
+
+```console
+#cd into project root:
+python3 -m pip install .
+```
+
+## Running Programs
+
+Run a `.geo` file:
+
+```console
+geobe examples/input_store_transform_output.geo --input hello
+```
+
+Run inline source:
+
+```console
+geobe --code "○→▽" --input hello
+```
+
+Read additional input values from standard input:
+
+```console
+printf 'first\nsecond\n' | geobe --code "○→▽\n○→▽" --stdin-input
+```
+
+Trace execution as JSON:
+
+```console
+geobe --code "○→□→▽" --input hello --trace
+```
+
+Trace execution in readable text:
+
+```console
+geobe --code "○→□→▽" --input hello --trace --trace-format text
+```
+
+Running the package module directly executes the built-in demo program:
+
+```console
+python -m geobe
+```
+
+## Example Program
+
+`examples/input_store_transform_output.geo`
+
+```geo
+○→□→△→▽
+```
+
+With input `hello`, the program stores the value, applies the default identity
+transform, and outputs `hello`.
+
+## Custom Transforms
+
+The `△` symbol is backed by a transform registry. The default transform is
+identity, and you can register your own behavior in Python code.
+
+See `examples/custom_transform.py` for a minimal example that returns a custom
+formatted value.
+
+## Development
+
+Run the test suite:
+
+```console
+pytest
+```
+
+Run linting and type checks:
+
+```console
+ruff check .
+mypy src tests
+```
+
+## Project Layout
+
+- `src/geobe/` interpreter, parser, runtime state, and CLI
+- `examples/` documented sample programs
+- `tests/` coverage for the CLI, parser, interpreter, and examples
+
+## Package Entry Points
+
+- `geobe` CLI: `geobe.cli:main`
+- Module entry point: `python -m geobe`
+
