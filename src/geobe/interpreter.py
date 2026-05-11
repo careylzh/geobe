@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
 
-from geobe.state import ExecutionState
+from geobe.state import ExecutionState, Value
 from geobe.transforms import TransformRegistry, default_transform_registry
 
 
@@ -15,7 +14,7 @@ class Interpreter:
 
     transforms: TransformRegistry = field(default_factory=default_transform_registry)
 
-    def run(self, program: str, inputs: list[Any] | None = None) -> ExecutionState:
+    def run(self, program: str, inputs: list[Value] | None = None) -> ExecutionState:
         """Run a program and return its state.
 
         Full traversal semantics are implemented by later user stories.

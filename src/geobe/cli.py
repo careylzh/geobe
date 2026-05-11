@@ -17,6 +17,14 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="?",
         help="Path to a .geo file. Inline execution will be added in a later story.",
     )
+    parser.add_argument(
+        "-i",
+        "--input",
+        dest="inputs",
+        action="append",
+        default=[],
+        help="Input value supplied to the program. Repeat to pass multiple strings.",
+    )
     return parser
 
 
