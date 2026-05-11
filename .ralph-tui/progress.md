@@ -9,6 +9,7 @@ after each iteration and it's included in prompts for context.
 - Use a `src/` package layout with `tool.pytest.ini_options.pythonpath = ["src"]` so tests can import the package directly before it is installed.
 - Model parser output as an immutable `Grid` dataclass with width, height, normalized rows, and safe `Position` lookups so later interpreter stories can share one grid API.
 - Keep runtime state explicit in typed dataclasses, with small state methods for input, output, memory, and trace mutation so later interpreter stories can add traversal semantics without spreading buffer bookkeeping across modules.
+- Keep traversal deterministic by discovering `○` source positions in row-major order, running one flow at a time, and recording every traversed semantic or arrow symbol through `ExecutionState.record_step`.
 
 ---
 
@@ -42,4 +43,16 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - Patterns discovered: use typed state dataclasses as the boundary between traversal and symbol semantics; this keeps future interpreter changes observable without coupling them to CLI or parser code.
   - Gotchas encountered: this environment still has no `python` executable on PATH, and `mypy`/`ruff` are not installed for `python3`; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass.
+---
+
+## 2026-05-11 - US-004
+- Implemented directional traversal in `Interpreter.run`, including row-major `○` source discovery, single-threaded flow execution, arrow direction changes, whitespace skipping, boundary/dead-end termination, and a configurable maximum step limit.
+- Added `InterpreterStepLimitError` and exported it from the package API.
+- Added traversal tests covering left-to-right, right-to-left, vertical movement, source dead ends, boundary termination, deterministic multi-source ordering, and step-limit loops.
+- Updated existing state and package smoke tests for the now-active interpreter traversal.
+- Files changed: `src/geobe/interpreter.py`, `src/geobe/__init__.py`, `tests/test_interpreter_traversal.py`, `tests/test_state.py`, `tests/test_package_structure.py`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - Patterns discovered: traversal can stay independent from symbol semantics by recording visits now and leaving value/memory/output effects for the semantic execution story.
+  - Gotchas encountered: an initial source has no active direction, so the engine only starts a flow when the first reachable non-space cell in a cardinal direction is an arrow pointing away from the source; direct semantic neighbors without an arrow terminate cleanly for the MVP.
+  - Quality gates: `python -m pytest`, `python -m mypy .`, and `python -m ruff check .` could not run because `python` is not on PATH; `python3 -m pytest`, `python3 -m compileall -q src tests`, and `git diff --check` pass, while `mypy` and `ruff` are not installed for `python3`.
 ---

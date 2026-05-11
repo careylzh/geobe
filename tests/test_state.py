@@ -8,18 +8,18 @@ from geobe.interpreter import Interpreter
 from geobe.state import DEFAULT_MEMORY_KEY, ExecutionState
 
 
-def test_interpreter_initializes_explicit_execution_state() -> None:
+def test_interpreter_returns_explicit_execution_state_after_traversal() -> None:
     state = Interpreter().run("○→▽", inputs=[1, "two"])
 
     assert state.program == "○→▽"
-    assert state.current_position is None
-    assert state.current_direction is None
+    assert state.current_position == Position(0, 2)
+    assert state.current_direction == "right"
     assert state.current_value is None
     assert state.input_buffer == [1, "two"]
     assert state.output_buffer == []
     assert state.memory == {}
-    assert state.visited_steps == 0
-    assert state.trace == []
+    assert state.visited_steps == 3
+    assert [entry.symbol for entry in state.trace] == ["○", "→", "▽"]
 
 
 def test_output_values_are_collected_in_order() -> None:
