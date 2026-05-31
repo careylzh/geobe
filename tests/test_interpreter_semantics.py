@@ -75,6 +75,12 @@ def test_quoted_literal_in_flow_does_not_start_second_flow() -> None:
     assert [entry.symbol for entry in state.trace] == ["○", "→", "«", "→", "▽"]
 
 
+def test_spell_directive_outputs_decoded_triangle_text() -> None:
+    state = Interpreter().run("spell ▹▶▿▿◂ ◮◂ ◣▿▵!")
+
+    assert state.output_buffer == ["hello world!"]
+
+
 def test_triangle_uses_configured_transform_behavior() -> None:
     def shout(context: TransformContext) -> str:
         return f"{context.current_value}!"

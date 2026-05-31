@@ -6,7 +6,12 @@
 - `→`, `←`, `↑`, and `↓` move execution through the grid.
 - `□` stores the current value in the default memory cell.
 - `△` transforms the current value. The default transform is identity.
+- `▲` represents change/delta and transforms the current value. The default
+  transform is identity.
 - `▽` appends the current value to the output list.
+- `◀` appends the current value to the output list.
+- `▶` traverses the current array by one index.
+- `▶▶` continues the current array loop or finishes it when exhausted.
 
 ## `input_store_transform_output.geo`
 
@@ -36,8 +41,52 @@ $ geobe examples/input_store_transform_output.geo --input hello
 Running the package module directly demonstrates the same input-store-transform-output flow with a built-in demo value:
 
 ```console
-$ python -m geobe
+$ python3 -m geobe
 {"outputs": ["demo-value"]}
+```
+
+## `hello_world_new_mappings.geo`
+
+Program:
+
+```geo
+«Hello, world!»→▲→◀
+```
+
+Expected behavior:
+
+1. `«Hello, world!»` sets the current value.
+2. `→` moves right.
+3. `▲` applies the default identity delta transform.
+4. `→` moves right.
+5. `◀` appends `Hello, world!` to the output list.
+
+Run it with the CLI:
+
+```console
+$ geobe examples/hello_world_new_mappings.geo
+{"outputs": ["Hello, world!"]}
+```
+
+## `hello_world_spell.geo`
+
+Program:
+
+```geo
+spell ▹▶▿▿◂ ◮◂ ◣▿▵!
+```
+
+Expected behavior:
+
+1. `spell` decodes triangle alphabet symbols into lowercase letters.
+2. `▹▶▿▿◂ ◮◂ ◣▿▵!` becomes `hello world!`.
+3. The decoded string is emitted as the program output.
+
+Run it with the CLI:
+
+```console
+$ geobe examples/hello_world_spell.geo
+{"outputs": ["hello world!"]}
 ```
 
 ## `custom_transform.py`

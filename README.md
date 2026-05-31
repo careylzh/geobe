@@ -23,6 +23,7 @@ Core symbols:
 - `▶▶` continue the current array loop, or finish when exhausted
 - `→`, `←`, `↑`, `↓` move execution through the grid
 - `«... »` read a literal string into the current value
+- `spell ...` decode triangle alphabet symbols into lowercase text output
 
 Spaces are treated as empty cells for traversal. Other non-traversable
 characters stop a path.
@@ -99,6 +100,14 @@ Array loop:
 
 With Python input `[1, 2, 3]`, the program traverses the array and outputs
 `[1, 2, 3]`.
+
+Spelled text:
+
+```geo
+spell ▹▶▿▿◂ ◮◂ ◣▿▵!
+```
+
+This decodes to `hello world!` and outputs it.
 
 ## Custom Transforms
 

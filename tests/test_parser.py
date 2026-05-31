@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from geobe.grid import Position
-from geobe.parser import ProgramParseError, parse_program
+from geobe.parser import ProgramParseError, decode_spell_text, parse_program
 
 
 def test_parse_program_normalizes_uneven_rows() -> None:
@@ -43,6 +43,16 @@ def test_grid_lookup_is_safe_for_out_of_bounds_positions() -> None:
     assert grid.get(Position(-1, 0)) is None
     assert grid.get(Position(0, 1)) is None
     assert grid.get(Position(1, 0)) is None
+
+
+def test_decode_spell_text_maps_triangle_alphabet_to_lowercase() -> None:
+    assert decode_spell_text("▹▶▿▿◂ ◮◂ ◣▿▵!") == "hello world!"
+
+
+def test_parse_program_expands_spell_directive_to_literal_output() -> None:
+    grid = parse_program("spell ▹▶▿▿◂ ◮◂ ◣▿▵!")
+
+    assert grid.rows() == ["«hello world!»→◀"]
 
 
 def test_parse_program_rejects_empty_source() -> None:
