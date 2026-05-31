@@ -2,17 +2,16 @@
   box-sizing: border-box;
 }
 
-.container-lg {
-  max-width: min(96vw, 1280px);
-  padding-left: clamp(16px, 3vw, 40px) !important;
-  padding-right: clamp(16px, 3vw, 40px) !important;
-}
-
 .markdown-body table {
   display: table;
-  width: 100%;
+  width: calc(100vw - clamp(24px, 5vw, 96px));
+  max-width: 1600px;
   table-layout: fixed;
-  margin: clamp(20px, 4vw, 36px) 0;
+  margin: clamp(20px, 4vw, 36px) auto;
+  margin-left: max(
+    calc((100% - 1600px) / 2),
+    calc((100% - (100vw - clamp(24px, 5vw, 96px))) / 2)
+  );
   border-collapse: collapse;
 }
 
@@ -40,19 +39,9 @@
 }
 
 @media (min-width: 768px) {
-  .container-lg {
-    max-width: min(94vw, 1320px);
-  }
-
   .markdown-body table th,
   .markdown-body table td {
     padding-top: clamp(14px, 2vw, 28px);
     padding-bottom: clamp(14px, 2vw, 28px);
-  }
-}
-
-@media (min-width: 1200px) {
-  .container-lg {
-    max-width: min(92vw, 1440px);
   }
 }
