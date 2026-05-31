@@ -28,4 +28,4 @@ def identity(context: TransformContext) -> Value:
 
 def default_transform_registry() -> TransformRegistry:
     """Create the default symbol transform registry."""
-    return {"△": identity}
+    return {"△": identity, "▲": identity}

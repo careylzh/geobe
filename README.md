@@ -16,7 +16,11 @@ Core symbols:
 - `○` read the next input value
 - `□` store the current value in memory
 - `△` transform the current value
+- `▲` change/delta transform the current value
 - `▽` append the current value to output
+- `◀` append the current value to output
+- `▶` traverse the current array by one index
+- `▶▶` continue the current array loop, or finish when exhausted
 - `→`, `←`, `↑`, `↓` move execution through the grid
 - `«... »` read a literal string into the current value
 
@@ -86,6 +90,15 @@ python3 -m geobe
 
 With input `hello`, the program stores the value, applies the default identity
 transform, and outputs `hello`.
+
+Array loop:
+
+```geo
+○→▶→◀→▶▶
+```
+
+With Python input `[1, 2, 3]`, the program traverses the array and outputs
+`[1, 2, 3]`.
 
 ## Custom Transforms
 

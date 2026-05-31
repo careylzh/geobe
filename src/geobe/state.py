@@ -48,6 +48,9 @@ class ExecutionState:
     current_position: Position | None = None
     current_direction: Direction | None = None
     current_value: Value = None
+    traversal_values: tuple[Value, ...] | None = None
+    traversal_index: int = -1
+    traversal_loop_start: Position | None = None
     visited_steps: int = 0
     trace: list[TraceEntry] = field(default_factory=list)
 

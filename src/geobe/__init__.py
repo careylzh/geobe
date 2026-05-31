@@ -6,6 +6,7 @@ from geobe.interpreter import (
     InterpreterInputError,
     InterpreterLiteralError,
     InterpreterStepLimitError,
+    InterpreterTraversalError,
 )
 from geobe.parser import ProgramParseError, parse_program
 from geobe.state import ExecutionState, TraceEntry
@@ -24,6 +25,7 @@ __all__ = [
     "InterpreterInputError",
     "InterpreterLiteralError",
     "InterpreterStepLimitError",
+    "InterpreterTraversalError",
     "Position",
     "ProgramParseError",
     "TraceEntry",

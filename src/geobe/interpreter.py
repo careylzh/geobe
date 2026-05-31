@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from geobe.grid import Grid, Position
@@ -21,7 +22,15 @@ ARROW_DIRECTIONS: dict[str, Direction] = {
     "↑": "up",
     "↓": "down",
 }
-SEMANTIC_SYMBOLS = frozenset({"○", "□", "△", "▽"})
+TRANSFORM_SYMBOLS = frozenset({"△", "▲"})
+APPEND_SYMBOLS = frozenset({"▽", "◀"})
+TRAVERSE_SYMBOL = "▶"
+CONTINUE_SYMBOL = "▶▶"
+SEMANTIC_SYMBOLS = (
+    frozenset({"○", "□", TRAVERSE_SYMBOL})
+    | TRANSFORM_SYMBOLS
+    | APPEND_SYMBOLS
+)
 LITERAL_STRING_OPEN = "«"
 LITERAL_STRING_CLOSE = "»"
 TRAVERSABLE_SYMBOLS = (
@@ -51,6 +60,10 @@ class InterpreterInputError(RuntimeError):
 
 class InterpreterLiteralError(RuntimeError):
     """Raised when a literal string block cannot be parsed."""
+
+
+class InterpreterTraversalError(RuntimeError):
+    """Raised when array traversal symbols cannot operate on the current value."""
 
 
 @dataclass(slots=True)
@@ -99,6 +112,23 @@ class Interpreter:
                 self._record_step(state, symbol, StepEffects())
                 continue
 
+            if symbol == TRAVERSE_SYMBOL and _is_continue_symbol(
+                grid,
+                position,
+                direction,
+            ):
+                state.current_position = position
+                state.current_direction = direction
+                should_continue = _advance_traversal(state)
+                self._record_step(state, CONTINUE_SYMBOL, StepEffects())
+
+                if should_continue and state.traversal_loop_start is not None:
+                    position = state.traversal_loop_start
+                    continue
+
+                position = _position_after_continue_symbol(grid, position, direction)
+                continue
+
             state.current_position = position
             state.current_direction = direction
             effects = self._execute_symbol(state, symbol)
@@ -109,6 +139,9 @@ class Interpreter:
                 if direction is None:
                     return
                 state.current_direction = direction
+
+            if symbol == TRAVERSE_SYMBOL:
+                state.traversal_loop_start = _next_position(grid, position, direction)
 
             position = _next_position(grid, position, direction)
 
@@ -141,16 +174,18 @@ class Interpreter:
             state.current_value = input_value
         elif symbol == "□":
             state.store_current_value()
-        elif symbol == "△":
-            transform = self.transforms.get("△", identity)
+        elif symbol in TRANSFORM_SYMBOLS:
+            transform = self.transforms.get(symbol, self.transforms.get("△", identity))
             context = TransformContext(
                 symbol=symbol,
                 current_value=state.current_value,
                 state=state,
             )
             state.current_value = transform(context)
-        elif symbol == "▽":
+        elif symbol in APPEND_SYMBOLS:
             state.append_output()
+        elif symbol == TRAVERSE_SYMBOL:
+            _start_traversal(state)
 
         return StepEffects(
             input_value=input_value,
@@ -208,6 +243,17 @@ def _has_incoming_arrow(grid: Grid, position: Position) -> bool:
     return False
 
 
+def _is_continue_symbol(
+    grid: Grid,
+    position: Position,
+    direction: Direction | None,
+) -> bool:
+    if direction is None:
+        return False
+    next_position = _move(position, direction)
+    return grid.get(next_position) == TRAVERSE_SYMBOL
+
+
 def _outgoing_direction(grid: Grid, position: Position) -> Direction | None:
     for direction in DIRECTIONS:
         next_position = _next_position(grid, position, direction)
@@ -235,6 +281,50 @@ def _next_position(
             return next_position
         return None
     return None
+
+
+def _position_after_continue_symbol(
+    grid: Grid,
+    position: Position,
+    direction: Direction | None,
+) -> Position | None:
+    if direction is None:
+        return None
+    second_symbol_position = _move(position, direction)
+    return _next_position(grid, second_symbol_position, direction)
+
+
+def _start_traversal(state: ExecutionState) -> None:
+    values = _coerce_traversal_values(state.current_value)
+    state.traversal_values = values
+    state.traversal_index = 0
+    state.current_value = values[0]
+
+
+def _advance_traversal(state: ExecutionState) -> bool:
+    values = state.traversal_values
+    if values is None:
+        msg = "Cannot continue array traversal before visiting ▶."
+        raise InterpreterTraversalError(msg)
+
+    next_index = state.traversal_index + 1
+    if next_index >= len(values):
+        return False
+
+    state.traversal_index = next_index
+    state.current_value = values[next_index]
+    return True
+
+
+def _coerce_traversal_values(value: Value) -> tuple[Value, ...]:
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        msg = "▶ requires the current value to be a non-empty array."
+        raise InterpreterTraversalError(msg)
+    values = tuple(value)
+    if not values:
+        msg = "▶ requires the current value to be a non-empty array."
+        raise InterpreterTraversalError(msg)
+    return values
 
 
 def _read_string_literal(

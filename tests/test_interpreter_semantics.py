@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from geobe.interpreter import Interpreter, InterpreterInputError
+from geobe.interpreter import (
+    Interpreter,
+    InterpreterInputError,
+    InterpreterTraversalError,
+)
 from geobe.state import DEFAULT_MEMORY_KEY
 from geobe.transforms import TransformContext, default_transform_registry
 
@@ -28,6 +32,25 @@ def test_square_stores_current_flow_value_in_memory() -> None:
 
 def test_default_triangle_transform_is_identity() -> None:
     state = Interpreter().run("○→△→▽", inputs=[42])
+
+    assert state.current_value == 42
+    assert state.output_buffer == [42]
+
+
+def test_delta_triangle_transform_is_identity_by_default() -> None:
+    state = Interpreter().run("○→▲→◀", inputs=[42])
+
+    assert state.current_value == 42
+    assert state.output_buffer == [42]
+
+
+def test_delta_triangle_uses_configured_transform_behavior() -> None:
+    def increment(context: TransformContext) -> int:
+        return int(context.current_value) + 1
+
+    interpreter = Interpreter(transforms={"▲": increment})
+
+    state = interpreter.run("○→▲→◀", inputs=[41])
 
     assert state.current_value == 42
     assert state.output_buffer == [42]
@@ -103,6 +126,54 @@ def test_down_triangle_appends_current_flow_value_to_output() -> None:
     assert state.output_buffer == ["result"]
     assert state.trace[-1].output_buffer == ("result",)
     assert state.trace[-1].output_changes == ("result",)
+
+
+def test_left_triangle_appends_current_flow_value_to_output() -> None:
+    state = Interpreter().run("○→◀", inputs=["result"])
+
+    assert state.output_buffer == ["result"]
+    assert state.trace[-1].symbol == "◀"
+    assert state.trace[-1].output_changes == ("result",)
+
+
+def test_right_triangle_traverses_array_by_one_index() -> None:
+    state = Interpreter().run("○→▶→◀", inputs=[[1, 2, 3]])
+
+    assert state.current_value == 1
+    assert state.output_buffer == [1]
+    assert state.traversal_values == (1, 2, 3)
+    assert state.traversal_index == 0
+
+
+def test_double_right_triangle_continues_until_array_is_exhausted() -> None:
+    state = Interpreter().run("○→▶→◀→▶▶", inputs=[["a", "b", "c"]])
+
+    assert state.output_buffer == ["a", "b", "c"]
+    assert [entry.symbol for entry in state.trace] == [
+        "○",
+        "→",
+        "▶",
+        "→",
+        "◀",
+        "→",
+        "▶▶",
+        "→",
+        "◀",
+        "→",
+        "▶▶",
+        "→",
+        "◀",
+        "→",
+        "▶▶",
+    ]
+
+
+def test_right_triangle_requires_non_empty_array() -> None:
+    with pytest.raises(
+        InterpreterTraversalError,
+        match="requires the current value to be a non-empty array",
+    ):
+        Interpreter().run("○→▶", inputs=["not-an-array"])
 
 
 def test_trace_records_effects_for_known_program() -> None:
