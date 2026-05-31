@@ -4,14 +4,11 @@
 
 .markdown-body table {
   display: table;
-  width: calc(100vw - clamp(24px, 5vw, 96px));
-  max-width: 1600px;
+  width: 80vw;
+  max-width: 1280px;
   table-layout: fixed;
   margin: clamp(20px, 4vw, 36px) auto;
-  margin-left: max(
-    calc((100% - 1600px) / 2),
-    calc((100% - (100vw - clamp(24px, 5vw, 96px))) / 2)
-  );
+  margin-left: max(calc((100% - 1280px) / 2), calc((100% - 80vw) / 2));
   border-collapse: collapse;
 }
 
