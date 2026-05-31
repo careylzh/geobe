@@ -1,0 +1,58 @@
+.markdown-body {
+  box-sizing: border-box;
+}
+
+.container-lg {
+  max-width: min(96vw, 1280px);
+  padding-left: clamp(16px, 3vw, 40px) !important;
+  padding-right: clamp(16px, 3vw, 40px) !important;
+}
+
+.markdown-body table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  margin: clamp(20px, 4vw, 36px) 0;
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  width: 50%;
+  padding: clamp(10px, 2.5vw, 22px);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.markdown-body table th {
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+  letter-spacing: 0;
+}
+
+.markdown-body table td:first-child {
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  font-weight: 600;
+}
+
+.markdown-body table td:last-child {
+  font-size: clamp(1.75rem, 7vw, 4rem);
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .container-lg {
+    max-width: min(94vw, 1320px);
+  }
+
+  .markdown-body table th,
+  .markdown-body table td {
+    padding-top: clamp(14px, 2vw, 28px);
+    padding-bottom: clamp(14px, 2vw, 28px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .container-lg {
+    max-width: min(92vw, 1440px);
+  }
+}
