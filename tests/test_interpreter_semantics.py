@@ -9,8 +9,16 @@ from geobe.interpreter import (
     InterpreterInputError,
     InterpreterTraversalError,
 )
+from geobe.parser import encode_spell_text
 from geobe.state import DEFAULT_MEMORY_KEY
 from geobe.transforms import TransformContext, default_transform_registry
+
+LONG_ENGLISH_MESSAGE = (
+    "Hello world! Welcome to geobe, a fun,new programming language to express "
+    "yourself, geometrically. Use shapes to write encoded messages to your "
+    "friends, and receive an equally fun message from your friends to be "
+    "decoded (by you, human, of course). Have fun! Sincerely, geobe founder"
+)
 
 
 def test_circle_reads_next_input_value_into_current_flow() -> None:
@@ -79,6 +87,14 @@ def test_spell_directive_outputs_decoded_triangle_text() -> None:
     state = Interpreter().run("spell ▹▶▿▿◂ ◮◂ ◣▿▵!")
 
     assert state.output_buffer == ["hello world!"]
+
+
+def test_spell_directive_outputs_long_encoded_english_message() -> None:
+    program = f"spell {encode_spell_text(LONG_ENGLISH_MESSAGE)}"
+
+    state = Interpreter().run(program)
+
+    assert state.output_buffer == [LONG_ENGLISH_MESSAGE.lower()]
 
 
 def test_triangle_uses_configured_transform_behavior() -> None:

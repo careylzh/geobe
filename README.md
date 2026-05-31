@@ -109,6 +109,14 @@ spell ▹▶▿▿◂ ◮◂ ◣▿▵!
 
 This decodes to `hello world!` and outputs it.
 
+Python code can also encode English into the triangle alphabet:
+
+```python
+from geobe.parser import encode_spell_text
+
+encoded = encode_spell_text("Hello world!")
+```
+
 ## Custom Transforms
 
 The `△` symbol is backed by a transform registry. The default transform is

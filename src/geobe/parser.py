@@ -35,6 +35,7 @@ SPELL_ALPHABET = {
     "◹": "y",
     "◺": "z",
 }
+ENCODE_SPELL_ALPHABET = {letter: symbol for symbol, letter in SPELL_ALPHABET.items()}
 
 
 class ProgramParseError(ValueError):
@@ -58,7 +59,15 @@ def parse_program(source: str) -> Grid:
 def decode_spell_text(source: str) -> str:
     """Decode geometric spelling symbols into lowercase alphabetic text."""
     decoded = "".join(SPELL_ALPHABET.get(symbol, symbol) for symbol in source)
-    return re.sub(r"\b([a-z]{1,2}) ([a-z]{1,3})\b", r"\1\2", decoded)
+    return re.sub(r"\b([a-z]{2}) ([a-z]{3})(?=[!?.)]|$)", r"\1\2", decoded)
+
+
+def encode_spell_text(source: str) -> str:
+    """Encode English alphabetic text into geometric spelling symbols."""
+    return "".join(
+        ENCODE_SPELL_ALPHABET.get(character.lower(), character)
+        for character in source
+    )
 
 
 def _expand_spell_directives(source: str) -> str:

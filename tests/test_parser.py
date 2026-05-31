@@ -5,7 +5,19 @@ from __future__ import annotations
 import pytest
 
 from geobe.grid import Position
-from geobe.parser import ProgramParseError, decode_spell_text, parse_program
+from geobe.parser import (
+    ProgramParseError,
+    decode_spell_text,
+    encode_spell_text,
+    parse_program,
+)
+
+LONG_ENGLISH_MESSAGE = (
+    "Hello world! Welcome to geobe, a fun,new programming language to express "
+    "yourself, geometrically. Use shapes to write encoded messages to your "
+    "friends, and receive an equally fun message from your friends to be "
+    "decoded (by you, human, of course). Have fun! Sincerely, geobe founder"
+)
 
 
 def test_parse_program_normalizes_uneven_rows() -> None:
@@ -47,6 +59,17 @@ def test_grid_lookup_is_safe_for_out_of_bounds_positions() -> None:
 
 def test_decode_spell_text_maps_triangle_alphabet_to_lowercase() -> None:
     assert decode_spell_text("▹▶▿▿◂ ◮◂ ◣▿▵!") == "hello world!"
+
+
+def test_encode_spell_text_maps_english_to_triangle_alphabet() -> None:
+    assert encode_spell_text("Hello, geobe!") == "▹▶▿▿◂, ▸▶◂△▶!"
+
+
+def test_spell_text_round_trips_long_english_message() -> None:
+    encoded = encode_spell_text(LONG_ENGLISH_MESSAGE)
+
+    assert encoded.startswith("▹▶▿▿◂ ◮◂◣▿▵!")
+    assert decode_spell_text(encoded) == LONG_ENGLISH_MESSAGE.lower()
 
 
 def test_parse_program_expands_spell_directive_to_literal_output() -> None:
