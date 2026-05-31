@@ -22,7 +22,13 @@ ARROW_DIRECTIONS: dict[str, Direction] = {
     "↓": "down",
 }
 SEMANTIC_SYMBOLS = frozenset({"○", "□", "△", "▽"})
-TRAVERSABLE_SYMBOLS = frozenset(ARROW_DIRECTIONS) | SEMANTIC_SYMBOLS
+LITERAL_STRING_OPEN = "«"
+LITERAL_STRING_CLOSE = "»"
+TRAVERSABLE_SYMBOLS = (
+    frozenset(ARROW_DIRECTIONS)
+    | SEMANTIC_SYMBOLS
+    | frozenset({LITERAL_STRING_OPEN})
+)
 DEFAULT_MAX_STEPS = 1000
 
 
@@ -41,6 +47,10 @@ class InterpreterStepLimitError(RuntimeError):
 
 class InterpreterInputError(RuntimeError):
     """Raised when a source node needs an input value that is unavailable."""
+
+
+class InterpreterLiteralError(RuntimeError):
+    """Raised when a literal string block cannot be parsed."""
 
 
 @dataclass(slots=True)
@@ -74,6 +84,20 @@ class Interpreter:
 
             if symbol in ARROW_DIRECTIONS:
                 direction = ARROW_DIRECTIONS[symbol]
+
+            if symbol == LITERAL_STRING_OPEN:
+                if direction is None:
+                    direction = "right"
+                state.current_position = position
+                state.current_direction = direction
+                literal_value, position = _read_string_literal(
+                    grid,
+                    position,
+                    direction,
+                )
+                state.current_value = literal_value
+                self._record_step(state, symbol, StepEffects())
+                continue
 
             state.current_position = position
             state.current_direction = direction
@@ -157,8 +181,31 @@ def _source_positions(grid: Grid) -> list[Position]:
         Position(row, column)
         for row in range(grid.height)
         for column in range(grid.width)
-        if grid.get(Position(row, column)) == "○"
+        if _is_source_symbol(grid, Position(row, column))
     ]
+
+
+def _is_source_symbol(grid: Grid, position: Position) -> bool:
+    symbol = grid.get(position)
+    if symbol == "○":
+        return True
+    if symbol == LITERAL_STRING_OPEN:
+        return not _has_incoming_arrow(grid, position)
+    return False
+
+
+def _has_incoming_arrow(grid: Grid, position: Position) -> bool:
+    for direction in DIRECTIONS:
+        cursor = _move(position, _opposite_direction(direction))
+        while grid.contains(cursor):
+            symbol = grid.get(cursor)
+            if symbol == " ":
+                cursor = _move(cursor, _opposite_direction(direction))
+                continue
+            if symbol in ARROW_DIRECTIONS and ARROW_DIRECTIONS[symbol] == direction:
+                return True
+            break
+    return False
 
 
 def _outgoing_direction(grid: Grid, position: Position) -> Direction | None:
@@ -190,6 +237,30 @@ def _next_position(
     return None
 
 
+def _read_string_literal(
+    grid: Grid,
+    position: Position,
+    direction: Direction,
+) -> tuple[str, Position | None]:
+    cursor = _move(position, direction)
+    literal: list[str] = []
+
+    while grid.contains(cursor):
+        symbol = grid.get(cursor)
+        if symbol is None:
+            break
+        if symbol == LITERAL_STRING_CLOSE:
+            return "".join(literal), _next_position(grid, cursor, direction)
+        literal.append(symbol)
+        cursor = _move(cursor, direction)
+
+    msg = (
+        "Missing closing delimiter for string literal "
+        f"at row {position.row}, column {position.column}."
+    )
+    raise InterpreterLiteralError(msg)
+
+
 def _move(position: Position, direction: Direction) -> Position:
     if direction == "up":
         return Position(position.row - 1, position.column)
@@ -198,3 +269,13 @@ def _move(position: Position, direction: Direction) -> Position:
     if direction == "left":
         return Position(position.row, position.column - 1)
     return Position(position.row, position.column + 1)
+
+
+def _opposite_direction(direction: Direction) -> Direction:
+    if direction == "up":
+        return "down"
+    if direction == "down":
+        return "up"
+    if direction == "left":
+        return "right"
+    return "left"

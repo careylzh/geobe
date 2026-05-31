@@ -7,7 +7,6 @@ from pathlib import Path
 
 from geobe import Interpreter, TransformContext
 
-
 EXAMPLE_PATH = Path(__file__).with_name("input_store_transform_output.geo")
 
 

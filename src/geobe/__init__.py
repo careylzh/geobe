@@ -1,7 +1,12 @@
 """Geobe, a geometric esoteric language interpreter."""
 
 from geobe.grid import Grid, Position
-from geobe.interpreter import Interpreter, InterpreterInputError, InterpreterStepLimitError
+from geobe.interpreter import (
+    Interpreter,
+    InterpreterInputError,
+    InterpreterLiteralError,
+    InterpreterStepLimitError,
+)
 from geobe.parser import ProgramParseError, parse_program
 from geobe.state import ExecutionState, TraceEntry
 from geobe.transforms import (
@@ -17,6 +22,7 @@ __all__ = [
     "Grid",
     "Interpreter",
     "InterpreterInputError",
+    "InterpreterLiteralError",
     "InterpreterStepLimitError",
     "Position",
     "ProgramParseError",

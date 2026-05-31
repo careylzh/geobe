@@ -18,6 +18,7 @@ Core symbols:
 - `△` transform the current value
 - `▽` append the current value to output
 - `→`, `←`, `↑`, `↓` move execution through the grid
+- `«... »` read a literal string into the current value
 
 Spaces are treated as empty cells for traversal. Other non-traversable
 characters stop a path.
@@ -45,6 +46,12 @@ Run inline source:
 geobe --code "○→▽" --input hello
 ```
 
+Run a literal string program:
+
+```console
+geobe --code "«hello, Geobe!»→▽"
+```
+
 Read additional input values from standard input:
 
 ```console
@@ -66,7 +73,7 @@ geobe --code "○→□→▽" --input hello --trace --trace-format text
 Running the package module directly executes the built-in demo program:
 
 ```console
-python -m geobe
+python3 -m geobe
 ```
 
 ## Example Program
@@ -112,5 +119,4 @@ mypy src tests
 ## Package Entry Points
 
 - `geobe` CLI: `geobe.cli:main`
-- Module entry point: `python -m geobe`
-
+- Module entry point: `python3 -m geobe`

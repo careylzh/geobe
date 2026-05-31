@@ -12,7 +12,6 @@ import pytest
 from geobe import Interpreter
 from geobe.cli import main
 
-
 EXAMPLES_DIR = Path("examples")
 DOCUMENTED_PROGRAM = EXAMPLES_DIR / "input_store_transform_output.geo"
 CUSTOM_TRANSFORM_EXAMPLE = EXAMPLES_DIR / "custom_transform.py"

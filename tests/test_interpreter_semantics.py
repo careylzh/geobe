@@ -33,6 +33,25 @@ def test_default_triangle_transform_is_identity() -> None:
     assert state.output_buffer == [42]
 
 
+def test_quoted_literal_string_sets_current_value() -> None:
+    program = '«hello, Geobe!»→▽'
+
+    state = Interpreter().run(program)
+
+    assert state.current_value == "hello, Geobe!"
+    assert state.output_buffer == ["hello, Geobe!"]
+    assert [entry.symbol for entry in state.trace] == ["«", "→", "▽"]
+
+
+def test_quoted_literal_in_flow_does_not_start_second_flow() -> None:
+    program = "○→«literal»→▽"
+
+    state = Interpreter().run(program, inputs=["input"])
+
+    assert state.output_buffer == ["literal"]
+    assert [entry.symbol for entry in state.trace] == ["○", "→", "«", "→", "▽"]
+
+
 def test_triangle_uses_configured_transform_behavior() -> None:
     def shout(context: TransformContext) -> str:
         return f"{context.current_value}!"

@@ -13,7 +13,6 @@ from geobe.interpreter import Interpreter
 from geobe.parser import ProgramParseError
 from geobe.state import ExecutionState, TraceEntry, Value
 
-
 EXIT_RUNTIME_ERROR = 1
 EXIT_USAGE_ERROR = 2
 DEMO_PROGRAM = "○→□→△→▽"
