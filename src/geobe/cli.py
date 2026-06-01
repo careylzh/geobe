@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from geobe.console import run_console
 from geobe.interpreter import Interpreter
 from geobe.parser import ProgramParseError
 from geobe.state import ExecutionState, TraceEntry, Value
@@ -60,6 +61,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="json",
         help="Render trace as structured JSON or readable text.",
     )
+    parser.add_argument(
+        "--console",
+        action="store_true",
+        help=(
+            "Start an interactive spelling console that echoes lowercase "
+            "letters as Geobe symbols and decodes them on Enter."
+        ),
+    )
     return parser
 
 
@@ -67,6 +76,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run the Geobe CLI."""
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.console:
+        if (
+            args.path
+            or args.inline_program is not None
+            or args.inputs
+            or args.stdin_input
+            or args.trace
+        ):
+            parser.error("provide either --console or program execution options")
+        return run_console()
 
     if args.path and args.inline_program is not None:
         parser.error("provide either a .geo file path or --code, not both")

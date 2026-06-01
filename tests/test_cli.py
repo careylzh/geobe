@@ -47,6 +47,24 @@ def test_cli_accepts_input_from_stdin(
     assert json.loads(captured.out) == {"outputs": ["first", "second"]}
 
 
+def test_cli_console_mode_starts_terminal_console(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called = False
+
+    def fake_run_console() -> int:
+        nonlocal called
+        called = True
+        return 0
+
+    monkeypatch.setattr("geobe.cli.run_console", fake_run_console)
+
+    exit_code = main(["--console"])
+
+    assert exit_code == 0
+    assert called is True
+
+
 def test_cli_trace_mode_prints_execution_trace(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

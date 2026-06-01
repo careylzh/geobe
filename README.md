@@ -63,6 +63,16 @@ Read additional input values from standard input:
 printf 'first\nsecond\n' | geobe --code "○→▽\n○→▽" --stdin-input
 ```
 
+Start the interactive spelling console:
+
+```console
+geobe --console
+```
+
+In console mode, lowercase letters are echoed as Geobe's mapped alphabet
+symbols. Pressing Enter prints the English equivalent of the current line.
+For example, typing `hello!` displays `▹▶▿▿◂!`, then Enter prints `hello!`.
+
 Trace execution as JSON:
 
 ```console
