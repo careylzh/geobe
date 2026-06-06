@@ -1,10 +1,35 @@
 # Geobe
 
-Geobe is a geometric esoteric programming language interpreter written in Python.
-Programs are 2D grids of Unicode symbols where arrows control flow and shapes
-carry semantics.
+Geobe is an experimental geometric esolang toolkit written in Python. Its
+current core is a small interpreter for 2D Unicode-symbol programs, plus a
+triangle alphabet used by `spell` programs and the interactive `geobe --console`
+mode.
 
-## Overview
+This is not yet a broad general-purpose programming language. The runtime MVP
+focuses on directional flow, one memory cell, input/output nodes, pluggable
+transforms, array traversal, and the triangle-to-lowercase spelling layer.
+
+## Quick Start
+
+Install the CLI:
+
+```console
+pipx install geobe
+```
+
+Run a small program that reads one input value and writes it to output:
+
+```console
+geobe --code "○→▽" --input hello
+```
+
+Expected output:
+
+```json
+{"outputs": ["hello"]}
+```
+
+## What Exists Today
 
 Geobe programs are rectangular text grids. The interpreter finds every `○`
 source node and follows directional flow through the grid until a path ends.
@@ -28,14 +53,52 @@ Core symbols:
 Spaces are treated as empty cells for traversal. Other non-traversable
 characters stop a path.
 
+The triangle alphabet is deliberately separate from the execution model. In a
+`.geo` file, `spell ▹▶▿▿◂` is parser shorthand for a literal string output. In
+`geobe --console`, typing lowercase English letters shows their triangle-symbol
+encoding and Enter decodes the visible line back to English.
+
 ## Installation
 
 The project targets Python 3.11+.
 
+For normal CLI use, install Geobe with `pipx`:
+
 ```console
-#cd into project root:
-python3 -m pip install .
+pipx install geobe
 ```
+
+To install a specific release:
+
+```console
+pipx install geobe==0.1.1
+```
+
+If `pipx` is not installed and you use Homebrew on macOS:
+
+```console
+brew install pipx
+pipx ensurepath
+pipx install geobe
+```
+
+If `pipx` is not installed in another Python environment, follow the
+[pipx installation guide](https://pipx.pypa.io/stable/installation/).
+
+For local development from a cloned checkout, install Geobe in a virtual
+environment:
+
+```console
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -e ".[dev]"
+```
+
+Avoid installing Geobe into a system Python with `pip install geobe`. On modern
+macOS Homebrew Python and some Linux distributions, pip may fail with
+`externally-managed-environment` because the operating system or package manager
+owns that Python installation. Use `pipx install geobe` for the CLI, or install
+inside a virtual environment for development.
 
 ## Running Programs
 
@@ -45,10 +108,18 @@ Run a `.geo` file:
 geobe examples/input_store_transform_output.geo --input hello
 ```
 
+```json
+{"outputs": ["hello"]}
+```
+
 Run inline source:
 
 ```console
 geobe --code "○→▽" --input hello
+```
+
+```json
+{"outputs": ["hello"]}
 ```
 
 Run a literal string program:
@@ -57,10 +128,18 @@ Run a literal string program:
 geobe --code "«hello, Geobe!»→▽"
 ```
 
+```json
+{"outputs": ["hello, Geobe!"]}
+```
+
 Read additional input values from standard input:
 
 ```console
 printf 'first\nsecond\n' | geobe --code "○→▽\n○→▽" --stdin-input
+```
+
+```json
+{"outputs": ["first", "second"]}
 ```
 
 Start the interactive spelling console:
@@ -69,8 +148,9 @@ Start the interactive spelling console:
 geobe --console
 ```
 
-In console mode, lowercase letters are echoed as Geobe's mapped alphabet
-symbols. Pressing Enter prints the English equivalent of the current line.
+Console mode is an alphabet exploration tool rather than the main interpreter.
+Lowercase letters are echoed as Geobe's mapped triangle symbols. Pressing Enter
+prints the English equivalent of the current line.
 For example, typing `hello!` displays `▹▶▿▿◂!`, then Enter prints `hello!`.
 
 Trace execution as JSON:
@@ -111,13 +191,14 @@ Array loop:
 With Python input `[1, 2, 3]`, the program traverses the array and outputs
 `[1, 2, 3]`.
 
-Spelled text:
+Triangle alphabet shorthand:
 
 ```geo
 spell ▹▶▿▿◂ ◮◂ ◣▿▵!
 ```
 
-This decodes to `hello world!` and outputs it.
+This decodes to `hello world!` and is expanded by the parser into a literal
+string output program.
 
 Python code can also encode English into the triangle alphabet:
 

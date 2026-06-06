@@ -24,7 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
     """Create the CLI argument parser."""
     parser = argparse.ArgumentParser(
         prog="geobe",
-        description="Run geometric esoteric language programs.",
+        description=(
+            "Run Geobe's geometric esolang programs or open the triangle "
+            "alphabet console."
+        ),
     )
     parser.add_argument(
         "path",

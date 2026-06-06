@@ -1,5 +1,10 @@
 # Geobe Examples
 
+Geobe currently combines a small 2D-symbol interpreter with a triangle alphabet
+spelling layer. The first examples exercise runtime flow through input, memory,
+transform, traversal, and output nodes. The `spell` example shows parser
+shorthand that decodes triangle symbols into lowercase text output.
+
 ## Core Symbols
 
 - `○` reads the next input value into the current flow.
@@ -80,7 +85,8 @@ Expected behavior:
 
 1. `spell` decodes triangle alphabet symbols into lowercase letters.
 2. `▹▶▿▿◂ ◮◂ ◣▿▵!` becomes `hello world!`.
-3. The decoded string is emitted as the program output.
+3. The parser expands the line to a literal string output program.
+4. The decoded string is emitted as the program output.
 
 Run it with the CLI:
 
