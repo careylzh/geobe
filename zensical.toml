@@ -1,0 +1,17 @@
+[project]
+site_name = "Geobe"
+site_url = "https://careylzh.github.io/geobe/"
+repo_url = "https://github.com/careylzh/geobe"
+docs_dir = "docs"
+site_dir = "site"
+nav = [
+  {"Console" = "index.md"},
+]
+extra_css = ["assets/css/geobe.css"]
+extra_javascript = ["assets/javascripts/geobe-console.js"]
+
+[project.theme]
+variant = "modern"
+
+[project.theme.palette]
+scheme = "slate"

@@ -4,17 +4,28 @@ title: Geobe
 
 # Geobe
 
-Geobe is an experimental geometric esolang toolkit. Today it has two closely
-related pieces:
+Geobe is an experimental geometric esolang toolkit. Its most complete experience
+is the interactive triangle console below. The project also contains a small 2D
+Unicode-symbol interpreter, but it is not yet a general-purpose programming
+language.
 
-- a small interpreter for 2D Unicode-symbol programs where arrows guide
-  execution through input, memory, transform, traversal, and output nodes
-- a triangle alphabet that maps geometric symbols to lowercase English letters
-  for `spell` programs and the interactive `geobe --console` mode
+## Try `geobe --console`
 
-The project is currently an MVP, not a complete general-purpose language. The
-alphabet is a spelling layer on top of the runtime, while grid execution remains
-the language core.
+Type lowercase ASCII letters. Their geometric encodings appear immediately;
+press Enter to decode the visible line back to English.
+
+<form class="geobe-console" data-geobe-console>
+  <label for="geobe-input">Input</label>
+  <textarea id="geobe-input" data-geobe-input rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="type hello and press Enter"></textarea>
+  <div class="geobe-terminal" role="log" aria-live="polite">
+    <div><span class="geobe-prompt" aria-hidden="true">›</span> <output data-geobe-encoded></output><span class="geobe-cursor" aria-hidden="true"></span></div>
+    <div data-geobe-decoded hidden></div>
+  </div>
+  <button type="submit">Decode</button>
+</form>
+
+Backspace edits the input normally. Uppercase letters, numbers, spaces, and
+punctuation pass through unchanged. Shift-Enter inserts a newline.
 
 ## Triangle Alphabet
 
@@ -63,5 +74,8 @@ Decodes to:
 hello world!
 ```
 
-The same mapping powers `geobe --console`: typed lowercase letters are shown as
-triangle symbols, and Enter decodes the visible line back to English.
+The same mapping powers the terminal command:
+
+```console
+geobe --console
+```
