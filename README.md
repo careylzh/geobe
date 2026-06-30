@@ -1,13 +1,38 @@
 # Geobe
 
 Geobe is an experimental geometric esolang toolkit written in Python. Its
-current core is a small interpreter for 2D Unicode-symbol programs, plus a
-triangle alphabet used by `spell` programs and the interactive `geobe --console`
-mode.
+most complete experience is an interactive triangle-alphabet console. It also
+includes a small interpreter for 2D Unicode-symbol programs.
 
-This is not yet a broad general-purpose programming language. The runtime MVP
-focuses on directional flow, one memory cell, input/output nodes, pluggable
-transforms, array traversal, and the triangle-to-lowercase spelling layer.
+Geobe is not yet a general-purpose programming language. The current runtime is
+an experiment in directional flow, one memory cell, input/output nodes,
+pluggable transforms, and array traversal.
+
+## Interactive Triangle Console
+
+Start the console:
+
+```console
+geobe --console
+```
+
+Type lowercase ASCII letters and Geobe immediately renders their geometric
+encoding. Press Enter to decode the visible symbols back to English.
+
+For example, typing `hello!` displays:
+
+```text
+▹▶▿▿◂!
+```
+
+Pressing Enter then prints:
+
+```text
+hello!
+```
+
+Backspace removes the most recent encoded character. Press Ctrl-C or Ctrl-D to
+exit. Uppercase letters, numbers, spaces, and punctuation pass through unchanged.
 
 ## Quick Start
 
@@ -141,17 +166,6 @@ printf 'first\nsecond\n' | geobe --code "○→▽\n○→▽" --stdin-input
 ```json
 {"outputs": ["first", "second"]}
 ```
-
-Start the interactive spelling console:
-
-```console
-geobe --console
-```
-
-Console mode is an alphabet exploration tool rather than the main interpreter.
-Lowercase letters are echoed as Geobe's mapped triangle symbols. Pressing Enter
-prints the English equivalent of the current line.
-For example, typing `hello!` displays `▹▶▿▿◂!`, then Enter prints `hello!`.
 
 Trace execution as JSON:
 
