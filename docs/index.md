@@ -4,78 +4,44 @@ title: Geobe
 
 # Geobe
 
-Geobe is an experimental geometric esolang toolkit. Its most complete experience
-is the interactive triangle console below. The project also contains a small 2D
-Unicode-symbol interpreter, but it is not yet a general-purpose programming
-language.
+Geobe is an experimental geometric esolang toolkit. It combines a triangle
+alphabet with a small interpreter for 2D Unicode-symbol programs.
 
-## Try `geobe --console`
+Geobe is not yet a general-purpose programming language. Its current runtime is
+an experiment in directional flow, one memory cell, input/output nodes,
+pluggable transforms, and array traversal.
 
-Type lowercase ASCII letters. Their geometric encodings appear immediately;
-press Enter to decode the visible line back to English.
+## Start here
 
-<form class="geobe-console" data-geobe-console>
-  <label for="geobe-input">Input</label>
-  <textarea id="geobe-input" data-geobe-input rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="type hello and press Enter"></textarea>
-  <div class="geobe-terminal" role="log" aria-live="polite">
-    <div><span class="geobe-prompt" aria-hidden="true">›</span> <output data-geobe-encoded></output><span class="geobe-cursor" aria-hidden="true"></span></div>
-    <div data-geobe-decoded hidden></div>
-  </div>
-  <button type="submit">Decode</button>
-</form>
+Install the command-line interface:
 
-Backspace edits the input normally. Uppercase letters, numbers, spaces, and
-punctuation pass through unchanged. Shift-Enter inserts a newline.
-
-## Triangle Alphabet
-
-The `spell` directive decodes Geobe's geometric alphabet symbols into lowercase
-English letters. Parser expansion turns a `spell ...` line into a literal
-string output program.
-
-| Letter | Geometry |
-| --- | --- |
-| a | ▲ |
-| b | △ |
-| c | ▴ |
-| d | ▵ |
-| e | ▶ |
-| f | ▷ |
-| g | ▸ |
-| h | ▹ |
-| i | ▼ |
-| j | ▽ |
-| k | ▾ |
-| l | ▿ |
-| m | ◀ |
-| n | ◁ |
-| o | ◂ |
-| p | ◃ |
-| q | ◢ |
-| r | ◣ |
-| s | ◤ |
-| t | ◥ |
-| u | ◬ |
-| v | ◭ |
-| w | ◮ |
-| x | ◸ |
-| y | ◹ |
-| z | ◺ |
-
-Example:
-
-```geo
-spell ▹▶▿▿◂ ◮◂ ◣▿▵!
+```console
+pipx install geobe
 ```
 
-Decodes to:
-
-```text
-hello world!
-```
-
-The same mapping powers the terminal command:
+Then explore the visual alphabet:
 
 ```console
 geobe --console
 ```
+
+Typing lowercase letters displays their geometric encoding. Press Enter to
+decode the visible symbols back to English.
+
+## Choose a path
+
+- [Learn the triangle alphabet](alphabet.md) for encoding, decoding, and the
+  interactive console.
+- [Explore the interpreter](interpreter.md) for grid execution, symbols, and
+  example programs.
+
+## Project status
+
+The triangle alphabet and grid interpreter are related experiments with
+different responsibilities. The alphabet maps text to shape. The interpreter
+executes paths through a geometric grid. Neither should be read as a claim that
+Geobe already provides the control structures or abstractions of a mature
+programming language.
+
+The [language design findings](https://github.com/careylzh/geobe/blob/main/LANGUAGE_DESIGN_FINDINGS.md)
+describe a staged path toward expressions, names, control flow, and functions.

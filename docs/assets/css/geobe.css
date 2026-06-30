@@ -1,76 +1,17 @@
-.geobe-console {
-  margin: 1.5rem 0 2rem;
+.md-grid { max-width: 88rem; }
+
+.md-sidebar--primary {
+  border-right: 1px solid color-mix(in srgb, currentColor 10%, transparent);
 }
 
-.geobe-console label {
-  display: block;
-  margin-bottom: 0.45rem;
-  font-weight: 700;
+.md-sidebar--secondary {
+  border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
 }
 
-.geobe-console textarea {
-  box-sizing: border-box;
-  width: 100%;
-  resize: vertical;
-  padding: 0.85rem 1rem;
-  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, currentColor 5%, transparent);
-  color: inherit;
-  font: inherit;
+.md-content h1 {
+  letter-spacing: -0.035em;
 }
 
-.geobe-console textarea:focus {
-  outline: 2px solid var(--md-accent-fg-color, #7c4dff);
-  outline-offset: 2px;
-}
-
-.geobe-terminal {
-  min-height: 5.5rem;
-  margin: 1rem 0;
-  padding: 1rem 1.2rem;
-  overflow-wrap: anywhere;
-  border-radius: 0.5rem;
-  background: #11131a;
-  color: #f4f4f5;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: clamp(1.15rem, 4vw, 1.7rem);
-  line-height: 1.6;
-}
-
-.geobe-prompt {
-  color: #8bdb81;
-}
-
-.geobe-cursor {
-  display: inline-block;
-  width: 0.55em;
-  height: 1em;
-  margin-left: 0.12em;
-  vertical-align: -0.12em;
-  background: currentColor;
-  animation: geobe-blink 1s steps(1) infinite;
-}
-
-.geobe-console button {
-  padding: 0.55rem 1rem;
-  border: 0;
-  border-radius: 0.4rem;
-  background: var(--md-primary-fg-color, #6750a4);
-  color: white;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.geobe-console button:hover {
-  filter: brightness(1.12);
-}
-
-@keyframes geobe-blink {
-  50% { opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .geobe-cursor { animation: none; }
+.md-content table td:nth-child(even) {
+  font-size: 1.35rem;
 }
