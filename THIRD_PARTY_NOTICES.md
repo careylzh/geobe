@@ -27,8 +27,8 @@ The GPL license text copied from the source archive is included at
 
 Geobe includes a generated exact-match phrase table derived from the OPUS
 Tatoeba English-Portuguese Moses-format dataset (`Tatoeba.en-pt`) release
-`v2023-04-12`. The generated table keeps the first 50,000 unique short
-English sentence pairs suitable for a lightweight browser bundle.
+`v2023-04-12`. The generated table keeps all 169,190 unique short English
+sentence pairs that pass Geobe's lightweight offline lookup filters.
 
 Source archive:
 https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-pt.txt.zip
