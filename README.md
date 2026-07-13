@@ -19,6 +19,12 @@ geobe --console
 Type lowercase ASCII letters and Geobe immediately renders their geometric
 encoding. Press Enter to decode the visible symbols back to English.
 
+To print a basic Portuguese translation on Enter instead, run:
+
+```console
+geobe --console --console-output-language portuguese
+```
+
 For example, typing `hello!` displays:
 
 ```text

@@ -14,6 +14,12 @@ geobe --console
 As you type, lowercase letters are rendered as geometry. Press Enter to decode
 the visible line. Backspace edits the latest character; Ctrl-C or Ctrl-D exits.
 
+Use Portuguese output instead of English with:
+
+```console
+geobe --console --console-output-language portuguese
+```
+
 ## Mapping
 
 | Letter | Geometry | Letter | Geometry |

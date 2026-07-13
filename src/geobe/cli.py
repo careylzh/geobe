@@ -72,6 +72,15 @@ def build_parser() -> argparse.ArgumentParser:
             "letters as Geobe symbols and decodes them on Enter."
         ),
     )
+    parser.add_argument(
+        "--console-output-language",
+        choices=("english", "portuguese", "portugese"),
+        default="english",
+        help=(
+            "Language printed after Enter in --console mode. Use portuguese "
+            "to translate decoded English text."
+        ),
+    )
     return parser
 
 
@@ -89,7 +98,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             or args.trace
         ):
             parser.error("provide either --console or program execution options")
-        return run_console()
+        return run_console(output_language=args.console_output_language)
+
+    if args.console_output_language != "english":
+        parser.error("--console-output-language requires --console")
 
     if args.path and args.inline_program is not None:
         parser.error("provide either a .geo file path or --code, not both")

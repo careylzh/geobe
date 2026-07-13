@@ -50,11 +50,11 @@ def test_cli_accepts_input_from_stdin(
 def test_cli_console_mode_starts_terminal_console(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    called = False
+    called_with_language = ""
 
-    def fake_run_console() -> int:
-        nonlocal called
-        called = True
+    def fake_run_console(*, output_language: str = "english") -> int:
+        nonlocal called_with_language
+        called_with_language = output_language
         return 0
 
     monkeypatch.setattr("geobe.cli.run_console", fake_run_console)
@@ -62,7 +62,25 @@ def test_cli_console_mode_starts_terminal_console(
     exit_code = main(["--console"])
 
     assert exit_code == 0
-    assert called is True
+    assert called_with_language == "english"
+
+
+def test_cli_console_mode_accepts_portuguese_output_language(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called_with_language = ""
+
+    def fake_run_console(*, output_language: str = "english") -> int:
+        nonlocal called_with_language
+        called_with_language = output_language
+        return 0
+
+    monkeypatch.setattr("geobe.cli.run_console", fake_run_console)
+
+    exit_code = main(["--console", "--console-output-language", "portuguese"])
+
+    assert exit_code == 0
+    assert called_with_language == "portuguese"
 
 
 def test_cli_trace_mode_prints_execution_trace(
