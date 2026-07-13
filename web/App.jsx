@@ -44,12 +44,25 @@ function TriangleField() {
 function Console() {
   const [input, setInput] = useState("");
   const [submitted, setSubmitted] = useState("");
+  const [outputLanguage, setOutputLanguage] = useState("portuguese");
   const inputRef = useRef(null);
   const encoded = encode(input);
+  const outputLabel = outputLanguage === "english" ? "English" : "Portugese";
 
-  async function submit() {
+  async function submit(language = outputLanguage) {
+    const decoded = decode(encoded);
+    if (language === "english") {
+      setSubmitted(decoded);
+      return;
+    }
+
     const { translateEnglishToPortuguese } = await import("./translation.js");
-    setSubmitted(translateEnglishToPortuguese(decode(encoded)));
+    setSubmitted(translateEnglishToPortuguese(decoded));
+  }
+
+  function chooseLanguage(language) {
+    setOutputLanguage(language);
+    void submit(language);
   }
 
   return (
@@ -95,13 +108,32 @@ function Console() {
       </div>
 
       <div className={`decoded-row ${submitted ? "is-visible" : ""}`}>
-        <span>Portuguese</span>
+        <span>{outputLabel}</span>
         <output data-testid="decoded-output">{submitted}</output>
       </div>
 
-      <button className="encode-button" onClick={submit} type="button">
-        Translate to Portuguese <span aria-hidden="true">→</span>
-      </button>
+      <div className="translate-control">
+        <div className="language-options" aria-label="Output language">
+          <button
+            className={outputLanguage === "english" ? "is-active" : ""}
+            onClick={() => chooseLanguage("english")}
+            type="button"
+          >
+            English
+          </button>
+          <span aria-hidden="true">|</span>
+          <button
+            className={outputLanguage === "portuguese" ? "is-active" : ""}
+            onClick={() => chooseLanguage("portuguese")}
+            type="button"
+          >
+            Portugese
+          </button>
+        </div>
+        <button className="encode-button" onClick={() => submit()} type="button">
+          Translate to {outputLabel} <span aria-hidden="true">→</span>
+        </button>
+      </div>
     </section>
   );
 }

@@ -75,7 +75,13 @@ main { min-height: 100vh; overflow: hidden; position: relative; }
 .decoded-row { display: grid; grid-template-columns: auto 1fr; gap: 20px; max-height: 0; margin-top: 0; overflow: hidden; opacity: 0; color: #777c8d; font: 400 11px "SFMono-Regular", Consolas, monospace; text-transform: uppercase; transition: .3s ease; }
 .decoded-row.is-visible { max-height: 80px; margin-top: 18px; opacity: 1; }
 .decoded-row output { color: #c4c5cd; font-size: 13px; text-transform: none; overflow-wrap: anywhere; }
-.encode-button { width: 100%; margin-top: 24px; padding: 15px 20px; display: flex; justify-content: space-between; border: 0; border-radius: 9px; background: linear-gradient(90deg, #7062e8, #8f7cf7); color: white; cursor: pointer; font-size: 13px; font-weight: 700; }
+.translate-control { position: relative; margin-top: 24px; padding-top: 30px; }
+.language-options { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(8px); pointer-events: none; color: #aeb2c2; font: 600 11px "SFMono-Regular", Consolas, monospace; transition: opacity .22s ease, transform .22s ease; }
+.translate-control:hover .language-options, .translate-control:focus-within .language-options { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.language-options button { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.language-options button:hover, .language-options button:focus-visible, .language-options button.is-active { color: #f3f1ff; }
+.language-options button:focus-visible { outline: 2px solid rgba(168,154,255,.7); outline-offset: 4px; }
+.encode-button { width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; border: 0; border-radius: 9px; background: linear-gradient(90deg, #7062e8, #8f7cf7); color: white; cursor: pointer; font-size: 13px; font-weight: 700; }
 .encode-button:hover { filter: brightness(1.1); }
 
 .triangle-field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
