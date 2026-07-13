@@ -19,11 +19,15 @@ geobe --console
 Type lowercase ASCII letters and Geobe immediately renders their geometric
 encoding. Press Enter to decode the visible symbols back to English.
 
-To print a basic Portuguese translation on Enter instead, run:
+To print an offline Portuguese translation on Enter instead, run:
 
 ```console
 geobe --console --console-output-language portuguese
 ```
+
+Portuguese output is backed by bundled FreeDict English-Portuguese dictionary
+data plus a compact exact-match Tatoeba sentence-pair table. It does not call a
+remote translation API.
 
 For example, typing `hello!` displays:
 

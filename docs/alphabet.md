@@ -20,6 +20,9 @@ Use Portuguese output instead of English with:
 geobe --console --console-output-language portuguese
 ```
 
+Portuguese output uses bundled FreeDict dictionary data and exact Tatoeba
+sentence-pair matches, so it works without a remote translation API.
+
 ## Mapping
 
 | Letter | Geometry | Letter | Geometry |

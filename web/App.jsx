@@ -47,8 +47,9 @@ function Console() {
   const inputRef = useRef(null);
   const encoded = encode(input);
 
-  function submit() {
-    setSubmitted(decode(encoded));
+  async function submit() {
+    const { translateEnglishToPortuguese } = await import("./translation.js");
+    setSubmitted(translateEnglishToPortuguese(decode(encoded)));
   }
 
   return (
@@ -56,7 +57,7 @@ function Console() {
       <div className="console-heading">
         <div>
           <p className="eyebrow">Interactive alphabet</p>
-          <h2 id="console-title">Type in English. See in geometry.</h2>
+          <h2 id="console-title">Type English. Learn Portuguese in geometry.</h2>
         </div>
         <div className="window-controls" aria-hidden="true"><i /><i /><i /></div>
       </div>
@@ -84,7 +85,7 @@ function Console() {
           spellCheck="false"
           value={input}
         />
-        <span className="key-hint">↵ encode</span>
+        <span className="key-hint">↵ translate</span>
       </div>
 
       <div className="geometry-output" aria-live="polite">
@@ -94,12 +95,12 @@ function Console() {
       </div>
 
       <div className={`decoded-row ${submitted ? "is-visible" : ""}`}>
-        <span>Decoded</span>
+        <span>Portuguese</span>
         <output data-testid="decoded-output">{submitted}</output>
       </div>
 
       <button className="encode-button" onClick={submit} type="button">
-        Decode geometry <span aria-hidden="true">→</span>
+        Translate to Portuguese <span aria-hidden="true">→</span>
       </button>
     </section>
   );
@@ -125,8 +126,8 @@ export default function App() {
           <p className="eyebrow hero-kicker"><span /> A geometric language experiment</p>
           <h1>Language,<br /><em>reimagined</em><br />in shape.</h1>
           <p className="hero-copy">
-            Geobe turns lowercase letters into a visual alphabet of triangles—an
-            expressive bridge between text, geometry, and code.
+            Geobe turns English into a visual alphabet of triangles, then uses
+            the decoded text as a Portuguese learning prompt.
           </p>
           <div className="hero-actions">
             <a className="primary-action" href="#playground">Try the console <span>↓</span></a>

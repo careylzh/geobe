@@ -27,7 +27,13 @@ def test_decode_console_line_returns_english_equivalent_text() -> None:
 
 
 def test_translate_console_line_returns_portuguese_text() -> None:
-    assert translate_console_line("▹▶▿▿◂ ◮◂◣▿▵!", "portuguese") == "ola mundo!"
+    assert (
+        translate_console_line(
+            "▹▶▿▿◂ ◮◂◣▿▵!",
+            "portuguese",
+        )
+        == "alô mundo!"
+    )
 
 
 def test_console_echoes_symbols_then_prints_decoded_text_on_enter() -> None:
@@ -49,7 +55,7 @@ def test_console_can_translate_to_portuguese_on_enter() -> None:
     )
 
     assert exit_code == 0
-    assert output_stream.getvalue() == "▹▶▿▿◂ ◮◂◣▿▵!\nola mundo!\n"
+    assert output_stream.getvalue() == "▹▶▿▿◂ ◮◂◣▿▵!\nalô mundo!\n"
 
 
 def test_console_supports_backspace_before_enter() -> None:
