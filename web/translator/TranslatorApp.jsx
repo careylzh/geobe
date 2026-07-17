@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { decode, encode } from "../alphabet.js";
 import TriangleField from "../TriangleField.jsx";
 import { createTranslator } from "./engine.js";
 import { getLanguage, languages } from "./languages.js";
 
 const translatorCache = new Map();
+const historyKey = "geobe-translator-history-v1";
+const historyLimit = 200;
 
 function loadTranslator(code) {
   if (!translatorCache.has(code)) {
@@ -16,58 +18,81 @@ function loadTranslator(code) {
   return translatorCache.get(code);
 }
 
+function loadHistory() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(historyKey) ?? "[]");
+    return Array.isArray(stored) ? stored.filter((entry) => !entry.pending) : [];
+  } catch {
+    return [];
+  }
+}
+
+function messageTime() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 export default function TranslatorApp() {
   const [input, setInput] = useState("");
   const [languageCode, setLanguageCode] = useState("zh-Hans");
   const [toEnglish, setToEnglish] = useState(false);
-  const [result, setResult] = useState(null);
-  const [isLoadingPack, setIsLoadingPack] = useState(false);
-  const submitId = useRef(0);
+  const [messages, setMessages] = useState(loadHistory);
+  const nextId = useRef(Date.now());
+  const scrollRef = useRef(null);
 
   const language = getLanguage(languageCode);
   const encoded = encode(input);
+  const sourceLabel = toEnglish ? language.nativeName : "English";
+  const targetLabel = toEnglish ? "English" : language.nativeName;
 
-  async function submit(code = languageCode, reversed = toEnglish, value = input) {
-    const text = decode(encode(value)).trim();
-    if (!text) {
-      setResult(null);
-      return;
-    }
-    const id = ++submitId.current;
-    if (code === "en") {
-      setResult({ english: text, target: text });
-      return;
-    }
+  useEffect(() => {
+    localStorage.setItem(historyKey, JSON.stringify(messages.slice(-historyLimit)));
+  }, [messages]);
 
-    setIsLoadingPack(!translatorCache.has(code));
-    const translator = await loadTranslator(code);
-    if (id !== submitId.current) return;
-    setIsLoadingPack(false);
-    setResult(
-      reversed
-        ? { english: translator.reverse(text), target: text }
-        : { english: text, target: translator.forward(text) },
+  useEffect(() => {
+    const list = scrollRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages]);
+
+  async function submit() {
+    const text = decode(encode(input)).trim();
+    if (!text) return;
+
+    const id = ++nextId.current;
+    const outgoing = {
+      id,
+      kind: "outgoing",
+      text,
+      encoded: encode(text),
+      label: languageCode === "en" ? "English" : sourceLabel,
+      time: messageTime(),
+    };
+    const incoming = {
+      id: id + 0.5,
+      kind: "incoming",
+      text: "",
+      label: languageCode === "en" ? "English" : targetLabel,
+      time: messageTime(),
+      pending: true,
+    };
+    setInput("");
+    setMessages((previous) => [...previous, outgoing, incoming].slice(-historyLimit));
+
+    let translated = text;
+    if (languageCode !== "en") {
+      const translator = await loadTranslator(languageCode);
+      translated = toEnglish ? translator.reverse(text) : translator.forward(text);
+    }
+    setMessages((previous) =>
+      previous.map((message) =>
+        message.id === incoming.id
+          ? { ...message, text: translated, pending: false, time: messageTime() }
+          : message,
+      ),
     );
   }
 
-  function chooseLanguage(code) {
-    setLanguageCode(code);
-    if (result) void submit(code);
-  }
-
-  function toggleDirection() {
-    const reversed = !toEnglish;
-    setToEnglish(reversed);
-    if (result) void submit(languageCode, reversed);
-  }
-
-  const sourceLabel = toEnglish ? language.nativeName : "English";
-  const placeholder = toEnglish && language.code !== "en"
-    ? `try ${language.sample}`
-    : "try hello world";
-
   return (
-    <main>
+    <main className="translator-main">
       <TriangleField />
       <nav className="topbar" aria-label="Primary navigation">
         <a className="brand" href="/geobe/" aria-label="Geobe home">
@@ -82,124 +107,131 @@ export default function TranslatorApp() {
       </nav>
 
       <div className="translator-page">
-        <header className="translator-heading">
-          <p className="eyebrow hero-kicker"><span /> Offline multilingual console</p>
-          <h1>The Geobe translator.</h1>
-          <p className="hero-copy">
-            Type in {toEnglish ? language.label : "English"}, watch it become
-            triangles, then translate it — every language pack is bundled, so
-            nothing leaves your browser.
-          </p>
-        </header>
-
-        <section className="console-card translator-card" aria-labelledby="translator-title">
-          <div className="console-heading">
-            <div>
-              <p className="eyebrow">Interactive translator</p>
-              <h2 id="translator-title">
-                {toEnglish ? `${language.label} → English` : `English → ${language.label}`}
-              </h2>
+        <section className="chat-card" aria-label="Geobe translator chat">
+          <header className="chat-header">
+            <div className="chat-title">
+              <p className="eyebrow">Offline translator</p>
+              <h1>
+                {toEnglish
+                  ? `${language.label} → English`
+                  : `English → ${language.label}`}
+              </h1>
             </div>
-            <div className="window-controls" aria-hidden="true"><i /><i /><i /></div>
+            <div className="chat-controls">
+              <select
+                aria-label="Language"
+                id="translator-language"
+                onChange={(event) => setLanguageCode(event.target.value)}
+                value={languageCode}
+              >
+                {languages.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                aria-label="Swap translation direction"
+                className="swap-button"
+                onClick={() => setToEnglish((value) => !value)}
+                type="button"
+              >
+                ⇄ swap
+              </button>
+              <button
+                aria-label="Clear chat history"
+                className="clear-button"
+                disabled={messages.length === 0}
+                onClick={() => setMessages([])}
+                type="button"
+              >
+                clear
+              </button>
+            </div>
+          </header>
+
+          <div aria-live="polite" className="chat-scroll" ref={scrollRef}>
+            {messages.length === 0 && (
+              <div className="chat-empty">
+                <span aria-hidden="true">▹ ▶ ◂ △ ▶</span>
+                <p>
+                  Send a message in {sourceLabel} — it stacks up here with its
+                  triangle encoding and {targetLabel} translation. Everything
+                  stays in your browser.
+                </p>
+              </div>
+            )}
+            {messages.map((message) => (
+              <article
+                className={`bubble ${message.kind} ${message.pending ? "is-pending" : ""}`}
+                data-testid={`bubble-${message.kind}`}
+                key={message.id}
+              >
+                <header>
+                  <span>{message.label}</span>
+                  <span className="bubble-time">{message.time}</span>
+                </header>
+                <p className="bubble-text">
+                  {message.pending ? "translating…" : message.text}
+                </p>
+                {message.encoded && message.encoded !== message.text && (
+                  <p aria-label="Geobe encoding" className="bubble-encoded">
+                    {message.encoded}
+                  </p>
+                )}
+              </article>
+            ))}
           </div>
 
-          <label className="input-label" htmlFor="translator-input">
-            Your message · {sourceLabel}
-          </label>
-          <div className="input-shell">
-            <textarea
-              autoCapitalize="off"
-              autoComplete="off"
-              autoFocus
-              id="translator-input"
-              onChange={(event) => {
-                setInput(event.target.value);
-                setResult(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void submit();
+          <div className="composer">
+            <div
+              className={`composer-preview ${input ? "is-visible" : ""}`}
+              aria-live="polite"
+            >
+              <span className="terminal-mark">›</span>
+              <output data-testid="encoded-output">{encoded}</output>
+            </div>
+            <div className="composer-row">
+              <textarea
+                aria-label={`Message in ${sourceLabel}`}
+                autoCapitalize="off"
+                autoComplete="off"
+                autoFocus
+                id="translator-input"
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void submit();
+                  }
+                }}
+                placeholder={
+                  toEnglish && language.code !== "en"
+                    ? `try ${language.sample}`
+                    : "try hello world"
                 }
-              }}
-              placeholder={placeholder}
-              rows="2"
-              spellCheck="false"
-              value={input}
-            />
-            <span className="key-hint">↵ translate</span>
+                rows="1"
+                spellCheck="false"
+                value={input}
+              />
+              <button
+                aria-label="Send"
+                className="send-button"
+                onClick={() => void submit()}
+                type="button"
+              >
+                ➤
+              </button>
+            </div>
           </div>
-
-          <div className="geometry-output" aria-live="polite">
-            <span className="terminal-mark">›</span>
-            <output data-testid="encoded-output">{encoded || "▹ ▶ ◂ △ ▶"}</output>
-            <span className="beam" />
-          </div>
-
-          <div className="translator-toolbar">
-            <label className="toolbar-label" htmlFor="translator-language">
-              Translate {toEnglish ? "from" : "to"}
-            </label>
-            <select
-              id="translator-language"
-              onChange={(event) => chooseLanguage(event.target.value)}
-              value={languageCode}
-            >
-              {languages.map((option) => (
-                <option key={option.code} value={option.code}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <button
-              aria-label="Swap translation direction"
-              className="swap-button"
-              onClick={toggleDirection}
-              type="button"
-            >
-              ⇄ swap
-            </button>
-          </div>
-
-          <div
-            aria-live="polite"
-            className={`split-panels ${result || isLoadingPack ? "is-visible" : ""}`}
-          >
-            <section className={`panel ${toEnglish ? "" : "is-source"}`}>
-              <header>
-                <span>English</span>
-                <span className="panel-role">{toEnglish ? "translation" : "source"}</span>
-              </header>
-              <output data-testid="english-output">
-                {isLoadingPack ? "…" : result?.english}
-              </output>
-            </section>
-            <section className={`panel ${toEnglish ? "is-source" : ""}`}>
-              <header>
-                <span>{language.code === "en" ? "English" : language.nativeName}</span>
-                <span className="panel-role">{toEnglish ? "source" : "translation"}</span>
-              </header>
-              <output data-testid="target-output">
-                {isLoadingPack ? "loading offline pack…" : result?.target}
-              </output>
-            </section>
-          </div>
-
-          <button className="encode-button" onClick={() => void submit()} type="button">
-            Translate <span aria-hidden="true">→</span>
-          </button>
         </section>
 
         <p className="translator-footnote">
           Dictionaries and phrase tables from FreeDict, OPUS Tatoeba, and
-          Wiktionary ship with the page — no translation API is called.
+          Wiktionary ship with the page — no translation API is called, and
+          your chat history never leaves this browser.
         </p>
       </div>
-
-      <footer>
-        <span>Experimental by design.</span>
-        <span>Open source · MIT</span>
-      </footer>
     </main>
   );
 }
