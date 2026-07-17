@@ -148,6 +148,7 @@ export default function App() {
           <span>geobe</span>
         </a>
         <div className="nav-links">
+          <a href="/geobe/translator/">Translator</a>
           <a href="/geobe/docs/">Documentation</a>
           <a className="github-link" href="https://github.com/careylzh/geobe">GitHub ↗</a>
         </div>
@@ -164,6 +165,9 @@ export default function App() {
           <div className="hero-actions">
             <a className="primary-action" href="#playground">Try the console <span>↓</span></a>
             <a className="text-action" href="/geobe/docs/">Read the docs <span>→</span></a>
+            <a className="text-action" href="/geobe/translator/">
+              New: offline translator <span>→</span>
+            </a>
           </div>
           <div className="alphabet-ribbon" aria-label="A sample of the Geobe alphabet">
             {["▲", "△", "▴", "▵", "▶", "▷", "▸", "▹"].map((glyph, index) => (

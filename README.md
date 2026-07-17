@@ -44,6 +44,21 @@ hello!
 Backspace removes the most recent encoded character. Press Ctrl-C or Ctrl-D to
 exit. Uppercase letters, numbers, spaces, and punctuation pass through unchanged.
 
+## Web Translator Page
+
+The project site includes an offline multilingual translator at
+[`/geobe/translator/`](https://careylzh.github.io/geobe/translator/). Type in
+English (or the selected language, after pressing swap), watch the text render
+in the triangle alphabet, then press Enter to fill a split English/target
+panel. Supported targets are English, Mandarin Chinese (Simplified),
+Portuguese (Brazil), Vietnamese, and French, in both directions.
+
+Every language pack is bundled with the page — FreeDict and Wiktionary
+dictionary layers plus OPUS Tatoeba exact-match sentence tables — so no
+remote translation API is called. Packs are generated offline by
+`scripts/build_language_packs.py`; sources and licenses are listed in
+`THIRD_PARTY_NOTICES.md`.
+
 ## Quick Start
 
 Install the CLI:
