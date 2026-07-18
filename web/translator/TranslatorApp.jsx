@@ -1,21 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { decode, encode } from "../alphabet.js";
 import TriangleField from "../TriangleField.jsx";
+import { detectLanguageCode } from "./detect.js";
 import { createTranslator } from "./engine.js";
 import { getLanguage, languages } from "./languages.js";
 
+const packCache = new Map();
 const translatorCache = new Map();
 const historyKey = "geobe-translator-history-v1";
 const historyLimit = 200;
 
+function loadPack(code) {
+  if (!packCache.has(code)) {
+    packCache.set(code, getLanguage(code).load());
+  }
+  return packCache.get(code);
+}
+
 function loadTranslator(code) {
   if (!translatorCache.has(code)) {
-    translatorCache.set(
-      code,
-      getLanguage(code).load().then((pack) => createTranslator(pack)),
-    );
+    translatorCache.set(code, loadPack(code).then((pack) => createTranslator(pack)));
   }
   return translatorCache.get(code);
+}
+
+// Reverse output from Han packs keeps CJK punctuation, which would miss the
+// Latin sentence tables on the second hop of a pivot translation.
+function normalizePivotEnglish(text) {
+  const latin = text.replace(
+    /[。！？，]/gu,
+    (mark) => ({ "。": ".", "！": "!", "？": "?", "，": "," })[mark],
+  );
+  return latin.charAt(0).toUpperCase() + latin.slice(1);
+}
+
+async function detectInputLanguage(text) {
+  const [fr, pt, vi] = await Promise.all([
+    loadPack("fr"),
+    loadPack("pt-BR"),
+    loadPack("vi"),
+  ]);
+  return detectLanguageCode(text, { fr, "pt-BR": pt, vi });
 }
 
 function loadHistory() {
@@ -35,14 +60,19 @@ export default function TranslatorApp() {
   const [input, setInput] = useState("");
   const [languageCode, setLanguageCode] = useState("zh-Hans");
   const [toEnglish, setToEnglish] = useState(false);
+  const [autoDetect, setAutoDetect] = useState(false);
   const [messages, setMessages] = useState(loadHistory);
   const nextId = useRef(Date.now());
   const scrollRef = useRef(null);
 
   const language = getLanguage(languageCode);
   const encoded = encode(input);
-  const sourceLabel = toEnglish ? language.nativeName : "English";
-  const targetLabel = toEnglish ? "English" : language.nativeName;
+  const sourceLabel = autoDetect
+    ? "any supported language"
+    : toEnglish
+      ? language.nativeName
+      : "English";
+  const targetLabel = !autoDetect && toEnglish ? "English" : language.nativeName;
 
   useEffect(() => {
     localStorage.setItem(historyKey, JSON.stringify(messages.slice(-historyLimit)));
@@ -52,6 +82,20 @@ export default function TranslatorApp() {
     const list = scrollRef.current;
     if (list) list.scrollTop = list.scrollHeight;
   }, [messages]);
+
+  async function translateDetected(text) {
+    const detected = await detectInputLanguage(text);
+    if (detected === languageCode) return { detected, translated: text };
+
+    let english = text;
+    if (detected !== "en") {
+      const source = await loadTranslator(detected);
+      english = normalizePivotEnglish(source.reverse(text));
+    }
+    if (languageCode === "en") return { detected, translated: english };
+    const target = await loadTranslator(languageCode);
+    return { detected, translated: target.forward(english) };
+  }
 
   async function submit() {
     const text = decode(encode(input)).trim();
@@ -63,7 +107,7 @@ export default function TranslatorApp() {
       kind: "outgoing",
       text,
       encoded: encode(text),
-      label: languageCode === "en" ? "English" : sourceLabel,
+      label: autoDetect ? "detecting…" : languageCode === "en" ? "English" : sourceLabel,
       time: messageTime(),
     };
     const incoming = {
@@ -78,16 +122,25 @@ export default function TranslatorApp() {
     setMessages((previous) => [...previous, outgoing, incoming].slice(-historyLimit));
 
     let translated = text;
-    if (languageCode !== "en") {
+    let sourceName = outgoing.label;
+    if (autoDetect) {
+      const result = await translateDetected(text);
+      translated = result.translated;
+      sourceName = getLanguage(result.detected).nativeName;
+    } else if (languageCode !== "en") {
       const translator = await loadTranslator(languageCode);
       translated = toEnglish ? translator.reverse(text) : translator.forward(text);
     }
     setMessages((previous) =>
-      previous.map((message) =>
-        message.id === incoming.id
-          ? { ...message, text: translated, pending: false, time: messageTime() }
-          : message,
-      ),
+      previous.map((message) => {
+        if (message.id === incoming.id) {
+          return { ...message, text: translated, pending: false, time: messageTime() };
+        }
+        if (message.id === id && message.label !== sourceName) {
+          return { ...message, label: sourceName };
+        }
+        return message;
+      }),
     );
   }
 
@@ -112,9 +165,11 @@ export default function TranslatorApp() {
             <div className="chat-title">
               <p className="eyebrow">Offline translator</p>
               <h1>
-                {toEnglish
-                  ? `${language.label} → English`
-                  : `English → ${language.label}`}
+                {autoDetect
+                  ? `Auto-detect → ${language.label}`
+                  : toEnglish
+                    ? `${language.label} → English`
+                    : `English → ${language.label}`}
               </h1>
             </div>
             <div className="chat-controls">
@@ -131,13 +186,24 @@ export default function TranslatorApp() {
                 ))}
               </select>
               <button
-                aria-label="Swap translation direction"
-                className="swap-button"
-                onClick={() => setToEnglish((value) => !value)}
+                aria-label="Detect the input language automatically"
+                aria-pressed={autoDetect}
+                className={`swap-button ${autoDetect ? "is-active" : ""}`}
+                onClick={() => setAutoDetect((value) => !value)}
                 type="button"
               >
-                ⇄ swap
+                ✦ auto
               </button>
+              {!autoDetect && (
+                <button
+                  aria-label="Swap translation direction"
+                  className="swap-button"
+                  onClick={() => setToEnglish((value) => !value)}
+                  type="button"
+                >
+                  ⇄ swap
+                </button>
+              )}
               <button
                 aria-label="Clear chat history"
                 className="clear-button"
@@ -156,8 +222,9 @@ export default function TranslatorApp() {
                 <span aria-hidden="true">▹ ▶ ◂ △ ▶</span>
                 <p>
                   Send a message in {sourceLabel} — it stacks up here with its
-                  triangle encoding and {targetLabel} translation. Everything
-                  stays in your browser.
+                  triangle encoding and {targetLabel} translation.
+                  {autoDetect && " The input language is detected for you."}{" "}
+                  Everything stays in your browser.
                 </p>
               </div>
             )}
@@ -206,9 +273,11 @@ export default function TranslatorApp() {
                   }
                 }}
                 placeholder={
-                  toEnglish && language.code !== "en"
-                    ? `try ${language.sample}`
-                    : "try hello world"
+                  autoDetect
+                    ? "type in any supported language"
+                    : toEnglish && language.code !== "en"
+                      ? `try ${language.sample}`
+                      : "try hello world"
                 }
                 rows="1"
                 spellCheck="false"

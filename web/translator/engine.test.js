@@ -53,6 +53,14 @@ test("reverse translation does not double terminal punctuation", async () => {
   assert.doesNotMatch(fr.reverse("Je t'aime !"), /[.!?][.!?]$/);
 });
 
+test("packs compose for pivot translation between two non-English languages", async () => {
+  const fr = createTranslator(await import("../packs/fr.js"));
+  const zh = createTranslator(await import("../packs/zh.js"));
+
+  assert.match(zh.forward(fr.reverse("Je t'aime !")), /爱/);
+  assert.match(fr.forward(zh.reverse("水")).toLowerCase(), /eau/);
+});
+
 test("unknown words pass through unchanged", async () => {
   const translator = createTranslator(await import("../packs/fr.js"));
 

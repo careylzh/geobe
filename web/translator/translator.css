@@ -69,6 +69,11 @@
 }
 .swap-button:hover, .clear-button:hover:not(:disabled) { border-color: rgba(168, 154, 255, .6); color: white; }
 .swap-button:focus-visible, .clear-button:focus-visible { outline: 2px solid rgba(168, 154, 255, .7); outline-offset: 3px; }
+.swap-button.is-active {
+  border-color: rgba(145, 128, 255, .85);
+  background: rgba(117, 99, 234, .3);
+  color: white;
+}
 .clear-button { color: #8b8fa1; }
 .clear-button:disabled { opacity: .4; cursor: default; }
 
